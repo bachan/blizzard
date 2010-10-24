@@ -1,0 +1,23 @@
+<blizzard>
+    <pid_file_name>${CMAKE_INSTALL_PREFIX}/var/run/blizzard.pid</pid_file_name>
+    <log_file_name>${CMAKE_INSTALL_PREFIX}/var/log/blizzard.log</log_file_name>
+    <log_level>notice</log_level>
+
+    <access_log_file_name>${CMAKE_INSTALL_PREFIX}/var/log/blizzard.access.log</access_log_file_name>
+
+    <stats ip="0.0.0.0" port="11111" />
+
+    <plugin ip="0.0.0.0" port="9999" >
+        <connection_timeout>100</connection_timeout>
+        <idle_timeout>1000</idle_timeout>
+
+        <library>${CMAKE_INSTALL_PREFIX}/lib64/liblz_status.so</library>
+        <params>${CMAKE_INSTALL_PREFIX}/etc/lz_status.plugin.xml</params>
+
+        <easy_threads>1</easy_threads>
+        <hard_threads>0</hard_threads>
+
+        <easy_queue_limit>200</easy_queue_limit>
+        <hard_queue_limit>300</hard_queue_limit>
+    </plugin>
+</blizzard>
