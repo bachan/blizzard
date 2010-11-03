@@ -9,11 +9,11 @@ namespace blizzard {
 
 class plugin_factory
 {
-    void* loaded_module;
-    blz_plugin* plugin_handle;
+	void* loaded_module;
+	blz_plugin* plugin_handle;
 
 public:
-	 plugin_factory();
+	plugin_factory();
 	~plugin_factory();
 
 	blz_plugin* open_plugin() const;

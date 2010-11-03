@@ -77,7 +77,7 @@ void blizzard::plugin_factory::stop_module()
 {
 	if (plugin_handle)
 	{
-//		delete plugin_handle;
+		delete plugin_handle;
 		plugin_handle = 0;
 	}
 
