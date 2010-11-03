@@ -69,6 +69,8 @@ void blizzard::plugin_factory::load_module(const blz_config::BLZ::PLUGIN& pd)
 
 	if (BLZ_OK != plugin_handle->load(pd.params.c_str()))
 	{
+		delete plugin_handle;
+		plugin_handle = 0;
 		throw std::logic_error("Plugin init failed");
 	}
 }
@@ -83,7 +85,8 @@ void blizzard::plugin_factory::stop_module()
 
 	if (loaded_module)
 	{
-		dlclose(loaded_module);
+		//FIXME: valgrind looses symbol names if we close the library
+		//dlclose(loaded_module);
 		loaded_module = 0;
 	}
 }
@@ -100,3 +103,4 @@ void blizzard::plugin_factory::idle()
 		plugin_handle->idle();
 	}
 }
+
