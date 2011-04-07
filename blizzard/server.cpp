@@ -569,7 +569,7 @@ void blizzard::server::prepare()
 #endif
 	loop = ev_default_loop(0);
 	ev_set_userdata(loop, this); /* hack to simplify things in http.cpp, couldn't be REALLY needed, if blizzard were written more libev friendly */
-	ev_set_io_collect_interval(loop, 0.05); /* hack to emulate old blizzard behaviour (epolling with timeout 100ms (we set it to 50ms here)) */
+	ev_set_io_collect_interval(loop, 0.01); /* hack to emulate old blizzard behaviour (epolling with timeout 100ms (we set it to 50ms here)) */
 	// ev_set_timeout_collect_interval(loop, 0.01);
 
 	//----------------------------
