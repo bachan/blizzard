@@ -477,8 +477,6 @@ bool blizzard::server::pop_done(http** el)
 	return ret;
 }
 
-//-----------------------------------------------------------------------------------------------------------
-
 void blizzard::server::load_config(const char* xml_in, bool is_daemon)
 {
 	if(::access(xml_in, F_OK) < 0)
