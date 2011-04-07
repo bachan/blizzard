@@ -527,12 +527,33 @@ static void silent_callback(EV_P_ ev_timer *w, int tev)
 		return;
 	}
 
+	blizzard::server *s = (blizzard::server *) ev_userdata(loop);
+
 	if (0 != coda_rotatelog)
 	{
-		blizzard::server *s = (blizzard::server *) ev_userdata(loop);
 		log_rotate(s->config.blz.log_file_name.c_str());
 		coda_rotatelog = 0;
 	}
+
+	blizzard::http * done_task = 0;
+	while (s->pop_done(&done_task))
+	{
+		done_task->unlock();
+
+		if (-1 != done_task->get_fd())
+		{
+			log_debug("%d is still alive", done_task->get_fd());
+			s->process(done_task);
+		}
+		else
+		{
+			log_debug("%d is already dead while travelling through queues", done_task->get_fd());
+			s->fds.release(done_task);
+		}
+	}
+
+	s->fds.kill_oldest(1000 * s->config.blz.plugin.connection_timeout);
+	stats.process();
 }
 
 void blizzard::server::accept_connection()
@@ -721,6 +742,7 @@ void blizzard::server::add_epoll_action(int fd, int action, uint32_t mask)
 
 void blizzard::server::epoll_processing_loop()
 {
+#if 0
 	http * done_task = 0;
 	while(pop_done(&done_task))
 	{
@@ -737,6 +759,7 @@ void blizzard::server::epoll_processing_loop()
 			fds.release(done_task);
 		}
 	}
+#endif
 
 	ev_run(loop, EVRUN_ONCE);
 
@@ -803,9 +826,11 @@ void blizzard::server::epoll_processing_loop()
 	}
 #endif
 
+#if 0
 	fds.kill_oldest(1000 * config.blz.plugin.connection_timeout);
 
 	stats.process();
+#endif
 
 #if 0
 	if (0 != coda_rotatelog)
