@@ -761,7 +761,7 @@ void blizzard::server::epoll_processing_loop()
 	}
 #endif
 
-	ev_run(loop, EVRUN_ONCE);
+	ev_run(loop, 0);
 
 #if 0
 	int nfds = 0;
