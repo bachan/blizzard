@@ -100,13 +100,7 @@ public:
 
 	void init_threads();
 	void join_threads();
-
-	/* bool pid_file_init(); */
-	/* bool pid_file_is_set()const; */
-	/* void pid_file_free(); */
 };
-
-//-----------------------------------------------------------------
 
 }
 

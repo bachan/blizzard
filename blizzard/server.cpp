@@ -99,65 +99,14 @@ inline std::string events2string(const epoll_event& ev)
 	return rep;
 }
 
-//-----------------------------------------------------------------------------------------------------------
-
 namespace blizzard
 {
-#if 0
-	extern volatile sig_atomic_t	quit;
-	extern volatile sig_atomic_t	hup;
-	extern volatile sig_atomic_t	rotate;
-
-	extern int			 MSG_LIZARD_ID;
-
-	//statistics stats;
-#endif
-
 	void* epoll_loop_function(void* ptr);
 	void*  easy_loop_function(void* ptr);
 	void*  hard_loop_function(void* ptr);
 	void* stats_loop_function(void* ptr);
 	void*  idle_loop_function(void* ptr);
 }
-
-#if 0
-//-----------------------------------------------------------------------------------------------------------
-
-blizzard::server::lz_callback::lz_callback() : lz(0)
-{
-
-}
-
-blizzard::server::lz_callback::~lz_callback()
-{
-	lz = 0;
-}
-
-
-void blizzard::server::lz_callback::init(server * srv)
-{
-	lz = srv;
-}
-
-void blizzard::server::lz_callback::log_message(plugin_log_levels log_level, const char * fmt, ...)
-{
-	va_list ap;
-	va_start(ap, fmt);
-
-	char lstr [4097];
-	vsnprintf(lstr, 4096, fmt, ap);
-	log_msg(log_level, "PLG: %s", lstr);
-}
-
-void blizzard::server::lz_callback::vlog_message(plugin_log_levels log_level, const char * fmt, va_list ap)
-{
-	char lstr [4097];
-	vsnprintf(lstr, 4096, fmt, ap);
-	log_message(log_level, "PLG: %s", lstr);
-}
-#endif
-
-//-----------------------------------------------------------------------------------------------------------
 
 blizzard::server::server()
 	: incoming_sock(-1)
@@ -508,7 +457,7 @@ bool blizzard::server::pop_done(http** el)
 
 	pthread_mutex_lock(&done_mutex);
 
-		size_t dq_sz = done_queue.size(); 
+	size_t dq_sz = done_queue.size(); 
 
 	stats.report_done_queue_len(dq_sz);
 
@@ -639,8 +588,6 @@ void blizzard::server::finalize()
 
 	factory.stop_module();
 }
-
-//-----------------------------------------------------------------------------------------------------------
 
 int blizzard::server::init_epoll()
 {
@@ -786,9 +733,6 @@ void blizzard::server::epoll_processing_loop()
 	if (0 != coda_rotatelog)
 	{
 		log_rotate(config.blz.log_file_name.c_str());
-#if 0
-		log_rotate(MSG_LIZARD_ACCESS_LOG_ID);
-#endif
 		coda_rotatelog = 0;
 	}
 }
@@ -811,16 +755,15 @@ bool blizzard::server::process_event(const epoll_event& ev)
 		}
 		else
 		{
-						if(ev.events & EPOLLIN)
-				{
+			if(ev.events & EPOLLIN)
+			{
 				con->allow_read();
-				   }
+			}
 
 			if(ev.events & EPOLLOUT)
 			{
 				con->allow_write();
 			}
-
 
 			/*if(ev.events & EPOLLRDHUP)
 			{
@@ -848,23 +791,6 @@ bool blizzard::server::process(http * con)
 
 		if(con->state() == http::sReadyToHandle)
 		{
-#if 0
-			if(!config.blz.access_log_file_name.empty())
-			{
-				/*
-				 * bachan :
-				 *
-				 * You can use log_access or log_message(YOUR_ID, RDEV_LOG_ACCESS, ...).
-				 * Using another log levels with log, that was opened as access-log is defined as
-				 * incorrect, 'cause I can't see any usability of log-levels in access-log-abstraction.
-				 *
-				 */
-
-				log_access(MSG_LIZARD_ACCESS_LOG_ID, "%s|%s?%s|", inet_ntoa(con->get_request_ip()),
-					con->get_request_uri_path(), con->get_request_uri_params());
-			}
-#endif
-
 			log_debug("push_easy(%d)", con->get_fd());
 
 			con->lock();
@@ -894,8 +820,6 @@ bool blizzard::server::process(http * con)
 void blizzard::server::easy_processing_loop()
 {
 	blz_plugin* plugin = factory.open_plugin();
-
-	/* blizzard::statistics::reporter easy_reporter(stats, blizzard::statistics::reporter::repEasy); */
 
 	http* task = 0;
 
@@ -942,16 +866,12 @@ void blizzard::server::easy_processing_loop()
 			}
 			break;
 		}
-
-		//easy_reporter.commit();
 	}
 }
 
 void blizzard::server::hard_processing_loop()
 {
 	blz_plugin* plugin = factory.open_plugin();
-
-	/* blizzard::statistics::reporter hard_reporter(stats, blizzard::statistics::reporter::repHard); */
 
 	http* task = 0;
 
@@ -975,8 +895,6 @@ void blizzard::server::hard_processing_loop()
 			push_done(task);
 			break;
 		}
-
-		/* easy_reporter.commit(); */
 	}
 }
 
@@ -1001,11 +919,6 @@ void blizzard::server::idle_processing_loop()
 	}
 }
 
-
-//--------------------------------------------------------------------------------------------------------
-
-//--------------------------------------------------------------------------------------------------------
-
 void *blizzard::epoll_loop_function(void *ptr)
 {
 	blizzard::server *srv = (blizzard::server *) ptr;
@@ -1026,8 +939,6 @@ void *blizzard::epoll_loop_function(void *ptr)
 	srv->fire_all_threads();
 	pthread_exit(NULL);
 }
-
-//--------------------------------------------------------------------------------------------------------
 
 void *blizzard::easy_loop_function(void *ptr)
 {
@@ -1050,8 +961,6 @@ void *blizzard::easy_loop_function(void *ptr)
 	pthread_exit(NULL);
 }
 
-//--------------------------------------------------------------------------------------------------------
-
 void *blizzard::hard_loop_function(void *ptr)
 {
 	 blizzard::server *srv = (blizzard::server *) ptr;
@@ -1073,8 +982,6 @@ void *blizzard::hard_loop_function(void *ptr)
 	pthread_exit(NULL);
 }
 
-//--------------------------------------------------------------------------------------------------------
-
 void *blizzard::idle_loop_function(void *ptr)
 {
 	blizzard::server *srv = (blizzard::server *) ptr;
@@ -1095,8 +1002,6 @@ void *blizzard::idle_loop_function(void *ptr)
 	srv->fire_all_threads();
 	pthread_exit(NULL);
 }
-
-//--------------------------------------------------------------------------------------------------------
 
 void *blizzard::stats_loop_function(void *ptr)
 {
@@ -1130,21 +1035,10 @@ void *blizzard::stats_loop_function(void *ptr)
 
 						if(stats_parser.state() == http::sReadyToHandle)
 						{
-#if 0
-							if(!srv->config.blz.access_log_file_name.empty())
-							{
-								log_access(MSG_LIZARD_ACCESS_LOG_ID, "%s|%s?%s|stats",
-										inet_ntoa(stats_parser.get_request_ip()),
-										stats_parser.get_request_uri_path(),
-										stats_parser.get_request_uri_params());
-							}
-#endif
-
 							stats_parser.set_response_status(200);
 							stats_parser.add_response_header("Content-type", "text/plain");
 
 							std::string resp = "<blizzard_stats>\n";
-
 
 							char buff[1024];
 
@@ -1157,7 +1051,7 @@ void *blizzard::stats_loop_function(void *ptr)
 							resp += buff;
 
 							snprintf(buff, 1024, "\t<fd_count>%d</fd_count>\n", (int)srv->fds.fd_count());
-														resp += buff; 
+							resp += buff; 
 
 							snprintf(buff, 1024, "\t<queues>\n\t\t<easy>%d</easy>\n\t\t<max_easy>%d</max_easy>\n"
 								"\t\t<hard>%d</hard>\n\t\t<max_hard>%d</max_hard>\n\t\t<done>%d</done>\n"
@@ -1188,12 +1082,10 @@ void *blizzard::stats_loop_function(void *ptr)
 							resp += "</blizzard_stats>\n";
 
 							stats_parser.add_response_buffer(resp.data(), resp.size());
-
 						}
-						else if(stats_parser.state() == http::sDone)
+						else if (stats_parser.state() == http::sDone)
 						{
 							log_debug("%d is done, closing write side of connection", stats_parser.get_fd());
-
 							break;
 						}
 					}
@@ -1218,5 +1110,4 @@ void *blizzard::stats_loop_function(void *ptr)
 	srv->fire_all_threads();
 	pthread_exit(NULL);
 }
-
 
