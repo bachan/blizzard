@@ -1,6 +1,7 @@
 #ifndef _T_SERV_SERVER_HPP____
 #define _T_SERV_SERVER_HPP____
 
+#include <ev.h>
 #include <stdarg.h>
 #include <sys/epoll.h>
 #include <stdexcept>
@@ -11,10 +12,12 @@
 #include "statistics.hpp"
 #include "utils.hpp"
 
+#define aux_memberof(t,n,p) (((t*)(((unsigned char *)(p))-offsetof(t,n))))
+
 namespace blizzard
 {
 
-class server
+struct server
 {
 	enum {LISTEN_QUEUE_SZ = 1024};
 	enum {HINT_EPOLL_SIZE = 10000};
@@ -51,6 +54,13 @@ class server
 	int epoll_wakeup_osock;
 	int threads_num;
 	time_t start_time;
+
+	struct ev_loop *loop;
+	ev_io incoming_watcher;
+	ev_io wakeup_watcher;
+	ev_timer silent_timer;
+
+	void accept_connection();
 
 	/* network part */
 

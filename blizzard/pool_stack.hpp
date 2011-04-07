@@ -6,74 +6,74 @@ namespace pool_ns {
 template <typename _DATA>
 class stack
 {
-    private:
-        _DATA * buffer;
-        size_t reserved;
-        size_t current;
+	private:
+		_DATA * buffer;
+		size_t reserved;
+		size_t current;
 
-    public:
-        stack(size_t reserve = 1024) : buffer(new _DATA[reserve]), reserved(reserve), current(-1){}
-        ~stack(){delete[] buffer;}
+	public:
+		stack(size_t reserve = 1024) : buffer(new _DATA[reserve]), reserved(reserve), current(-1){}
+		~stack(){delete[] buffer;}
 
-        void push(_DATA l)
-        {
-            if(current + 1 >= reserved)
-            {
-                reserve(2 * reserved);
-            }
+		void push(_DATA l)
+		{
+			if(current + 1 >= reserved)
+			{
+				reserve(2 * reserved);
+			}
 
-            buffer[++current] = l;
-        }
+			buffer[++current] = l;
+		}
 
-        void reserve(size_t sz)
-        {
-            _DATA * _t = new _DATA[sz];
+		void reserve(size_t sz)
+		{
+			_DATA * _t = new _DATA[sz];
 
-            size_t to_wr = size() < sz ? size() : sz;
+			size_t to_wr = size() < sz ? size() : sz;
 
-            if(to_wr)
-            {
-                memcpy(_t, buffer, to_wr * sizeof(_DATA));
-            }
+			if(to_wr)
+			{
+				memcpy(_t, buffer, to_wr * sizeof(_DATA));
+			}
 
-            reserved  = sz;
+			reserved  = sz;
 
-            delete[] buffer;
+			delete[] buffer;
 
-            buffer = _t;
-        }
+			buffer = _t;
+		}
 
-        _DATA pop()
-        {
-            // FIXME warning current is always >= 0 because unsigned
-            // return current >= 0 ? buffer[current--] : buffer[0];
-            return buffer[current--];
-        }
+		_DATA pop()
+		{
+			// FIXME warning current is always >= 0 because unsigned
+			// return current >= 0 ? buffer[current--] : buffer[0];
+			return buffer[current--];
+		}
 
-        size_t size()const
-        {
-            return current + 1;
-        }
+		size_t size()const
+		{
+			return current + 1;
+		}
 
-        size_t capacity()const
-        {
-            return reserved;
-        }
+		size_t capacity()const
+		{
+			return reserved;
+		}
 
-        bool empty()const
-        {
-            return size() == 0;
-        }
+		bool empty()const
+		{
+			return size() == 0;
+		}
 
-        void erase()
-        {
-            current = 0;
-        }
+		void erase()
+		{
+			current = 0;
+		}
 
-        _DATA * data()
-        {
-            return buffer;
-        }
+		_DATA * data()
+		{
+			return buffer;
+		}
 };
 
 }

@@ -19,7 +19,7 @@ FIND_LIBRARY(LIB_CODA coda PATHS /usr/lib /usr/local/lib /usr/lib64 /usr/local/l
 
 AUX_SOURCE_DIRECTORY(blizzard/ SRC_BLIZZARD)
 ADD_EXECUTABLE(blizzard ${SRC_BLIZZARD})
-TARGET_LINK_LIBRARIES(blizzard ${LIB_CODA} ${LIB_JUDY} ${LIB_EXPAT} pthread dl)
+TARGET_LINK_LIBRARIES(blizzard ${LIB_CODA} ${LIB_JUDY} ${LIB_EXPAT} ev pthread dl)
 
 INSTALL(FILES blizzard/plugin.hpp DESTINATION include/blizzard)
 INSTALL(TARGETS blizzard DESTINATION bin)

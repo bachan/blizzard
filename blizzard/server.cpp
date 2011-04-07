@@ -506,10 +506,69 @@ void blizzard::server::load_config(const char* xml_in, bool is_daemon)
 	}
 }
 
+static void incoming_callback(EV_P_ ev_io *w, int tev)
+{
+	blizzard::server *s = (blizzard::server *) ev_userdata(loop);
+	s->accept_connection();
+}
+
+static void wakeup_callback(EV_P_ ev_io *w, int tev)
+{
+	blizzard::server *s = (blizzard::server *) ev_userdata(loop);
+	s->epoll_recv_wakeup();
+}
+
+static void silent_callback(EV_P_ ev_timer *w, int tev)
+{
+	if (0 != coda_terminate)
+	{
+		ev_timer_stop(EV_A_ w);
+		ev_unloop(EV_A_ EVUNLOOP_ALL);
+		return;
+	}
+
+	if (0 != coda_rotatelog)
+	{
+		blizzard::server *s = (blizzard::server *) ev_userdata(loop);
+		log_rotate(s->config.blz.log_file_name.c_str());
+		coda_rotatelog = 0;
+	}
+}
+
+void blizzard::server::accept_connection()
+{
+	struct in_addr ip;
+
+	int client = lz_utils::accept_new_connection(incoming_sock, ip);
+
+	if(client >= 0)
+	{
+		log_debug("accept_new_connection: %d from %s", client, inet_ntoa(ip));
+
+		lz_utils::set_nonblocking(client);
+
+		http *con = fds.create(client, ip);
+
+		if (NULL != con)
+		{
+			// add_epoll_action(client, EPOLL_CTL_ADD, EPOLLIN | EPOLLOUT[> | EPOLLRDHUP<] | EPOLLET);
+			con->add_watcher(loop);
+		}
+		else
+		{
+			log_error("ERROR: fd[%d] is still in list of fds", client);
+		}
+	}
+}
+
 void blizzard::server::prepare()
 {
 	factory.load_module(config.blz.plugin);
+#if 0
 	epoll_sock = init_epoll();
+#endif
+	loop = ev_default_loop(0);
+	ev_set_userdata(loop, this); /* hack to simplify things in http.cpp, couldn't be REALLY needed, if blizzard were written more libev friendly */
 
 	//----------------------------
 	//add incoming sock
@@ -521,7 +580,11 @@ void blizzard::server::prepare()
 	}
 
 	lz_utils::set_nonblocking(incoming_sock);
+#if 0
 	add_epoll_action(incoming_sock, EPOLL_CTL_ADD, EPOLLIN);
+#endif
+	ev_io_init(&incoming_watcher, incoming_callback, incoming_sock, EV_READ);
+	ev_io_start(loop, &incoming_watcher);
 
 	//----------------------------
 	//add stats sock
@@ -548,8 +611,14 @@ void blizzard::server::prepare()
 	epoll_wakeup_isock = pipefd[0];
 
 	lz_utils::set_nonblocking(epoll_wakeup_isock);
+#if 0
 	add_epoll_action(epoll_wakeup_isock, EPOLL_CTL_ADD, EPOLLIN | EPOLLET);
+#endif
+	ev_io_init(&wakeup_watcher, wakeup_callback, epoll_wakeup_isock, EV_READ);
+	ev_io_start(loop, &wakeup_watcher);
 
+	ev_timer_init(&silent_timer, silent_callback, 0, 0.5);
+	ev_timer_again(loop, &silent_timer);
 }
 
 void blizzard::server::finalize()
@@ -578,15 +647,18 @@ void blizzard::server::finalize()
 		epoll_wakeup_osock = -1;
 	}
 
+#if 0
 	if (-1 != epoll_sock)
 	{
 		close(epoll_sock);
 		epoll_sock = -1;
 	}
+#endif
 
 	factory.stop_module();
 }
 
+#if 0
 int blizzard::server::init_epoll()
 {
 	log_debug("init_epoll");
@@ -602,7 +674,9 @@ int blizzard::server::init_epoll()
 
 	return res;
 }
+#endif
 
+#if 0
 void blizzard::server::add_epoll_action(int fd, int action, uint32_t mask)
 {
 	log_debug("add_epoll_action %d", fd);
@@ -643,6 +717,7 @@ void blizzard::server::add_epoll_action(int fd, int action, uint32_t mask)
 		throw std::logic_error(err_str);
 	}
 }
+#endif
 
 void blizzard::server::epoll_processing_loop()
 {
@@ -663,6 +738,9 @@ void blizzard::server::epoll_processing_loop()
 		}
 	}
 
+	ev_run(loop, EVRUN_ONCE);
+
+#if 0
 	int nfds = 0;
 	do
 	{
@@ -723,18 +801,22 @@ void blizzard::server::epoll_processing_loop()
 			process_event(events[i]);
 		}
 	}
+#endif
 
 	fds.kill_oldest(1000 * config.blz.plugin.connection_timeout);
 
 	stats.process();
 
+#if 0
 	if (0 != coda_rotatelog)
 	{
 		log_rotate(config.blz.log_file_name.c_str());
 		coda_rotatelog = 0;
 	}
+#endif
 }
 
+#if 0
 bool blizzard::server::process_event(const epoll_event& ev)
 {
 	log_debug("query event: %s", events2string(ev).c_str());
@@ -780,6 +862,7 @@ bool blizzard::server::process_event(const epoll_event& ev)
 
 	return true;
 }
+#endif
 
 bool blizzard::server::process(http * con)
 {
@@ -807,6 +890,8 @@ bool blizzard::server::process(http * con)
 		else if(con->state() == http::sDone || con->state() == http::sUndefined)
 		{
 			log_debug("%d is done, closing write side of connection", con->get_fd());
+
+			ev_io_stop(loop, &con->watcher);
 
 			fds.del(con->get_fd());
 		}

@@ -17,42 +17,42 @@ class pool
 {
 protected:
 
-    struct page
-    {
-        page * next;
+	struct page
+	{
+		page * next;
 
-        T * data;
-        T * free_node;
+		T * data;
+		T * free_node;
 
-        page();
-        ~page();
+		page();
+		~page();
 
-        bool full()const;
+		bool full()const;
 
-        T * allocate();
+		T * allocate();
 
-        void attach(page * p);
-    };
+		void attach(page * p);
+	};
 
-    stack<T*> free_nodes;
+	stack<T*> free_nodes;
 
-    page * root;
+	page * root;
 
-    u_int16_t pages_num;
-    u_int32_t objects_num;
+	u_int16_t pages_num;
+	u_int32_t objects_num;
 
 public:
-    pool();
-    ~pool();
+	pool();
+	~pool();
 
-    u_int32_t allocated_pages()const;
-    u_int32_t allocated_objects()const;
-    u_int32_t allocated_bytes()const;
+	u_int32_t allocated_pages()const;
+	u_int32_t allocated_objects()const;
+	u_int32_t allocated_bytes()const;
 
-    size_t    page_size()const;
+	size_t    page_size()const;
 
-    T * allocate();
-    void free(T * elem);
+	T * allocate();
+	void free(T * elem);
 };
 
 #include "pool.tcc"
