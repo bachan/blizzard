@@ -527,33 +527,12 @@ static void silent_callback(EV_P_ ev_timer *w, int tev)
 		return;
 	}
 
-	blizzard::server *s = (blizzard::server *) ev_userdata(loop);
-
 	if (0 != coda_rotatelog)
 	{
+		blizzard::server *s = (blizzard::server *) ev_userdata(loop);
 		log_rotate(s->config.blz.log_file_name.c_str());
 		coda_rotatelog = 0;
 	}
-
-	blizzard::http * done_task = 0;
-	while (s->pop_done(&done_task))
-	{
-		done_task->unlock();
-
-		if (-1 != done_task->get_fd())
-		{
-			log_debug("%d is still alive", done_task->get_fd());
-			s->process(done_task);
-		}
-		else
-		{
-			log_debug("%d is already dead while travelling through queues", done_task->get_fd());
-			s->fds.release(done_task);
-		}
-	}
-
-	s->fds.kill_oldest(1000 * s->config.blz.plugin.connection_timeout);
-	stats.process();
 }
 
 void blizzard::server::accept_connection()
@@ -590,6 +569,8 @@ void blizzard::server::prepare()
 #endif
 	loop = ev_default_loop(0);
 	ev_set_userdata(loop, this); /* hack to simplify things in http.cpp, couldn't be REALLY needed, if blizzard were written more libev friendly */
+	ev_set_io_collect_interval(loop, 0.05); /* hack to emulate old blizzard behaviour (epolling with timeout 100ms (we set it to 50ms here)) */
+	// ev_set_timeout_collect_interval(loop, 0.01);
 
 	//----------------------------
 	//add incoming sock
@@ -638,7 +619,7 @@ void blizzard::server::prepare()
 	ev_io_init(&wakeup_watcher, wakeup_callback, epoll_wakeup_isock, EV_READ);
 	ev_io_start(loop, &wakeup_watcher);
 
-	ev_timer_init(&silent_timer, silent_callback, 0, 0.5);
+	ev_timer_init(&silent_timer, silent_callback, 0, 1);
 	ev_timer_again(loop, &silent_timer);
 }
 
@@ -742,7 +723,6 @@ void blizzard::server::add_epoll_action(int fd, int action, uint32_t mask)
 
 void blizzard::server::epoll_processing_loop()
 {
-#if 0
 	http * done_task = 0;
 	while(pop_done(&done_task))
 	{
@@ -759,9 +739,8 @@ void blizzard::server::epoll_processing_loop()
 			fds.release(done_task);
 		}
 	}
-#endif
 
-	ev_run(loop, 0);
+	ev_run(loop, EVRUN_ONCE);
 
 #if 0
 	int nfds = 0;
@@ -826,11 +805,9 @@ void blizzard::server::epoll_processing_loop()
 	}
 #endif
 
-#if 0
 	fds.kill_oldest(1000 * config.blz.plugin.connection_timeout);
 
 	stats.process();
-#endif
 
 #if 0
 	if (0 != coda_rotatelog)
