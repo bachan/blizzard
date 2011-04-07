@@ -3,7 +3,7 @@
 
 #include <ev.h>
 #include <stdarg.h>
-#include <sys/epoll.h>
+/* #include <sys/epoll.h> */
 #include <stdexcept>
 #include <deque>
 #include "config.hpp"
@@ -23,7 +23,7 @@ struct server
 	enum {HINT_EPOLL_SIZE = 10000};
 	enum {EPOLL_EVENTS = 2000};
 
-	struct epoll_event events[EPOLL_EVENTS];
+	/* struct epoll_event events[EPOLL_EVENTS]; */
 
 	pthread_t epoll_th;
 	std::vector<pthread_t> easy_th;
@@ -77,7 +77,7 @@ struct server
 
 	/* pthreads part */
 
-	bool process_event(const epoll_event&);
+	/* bool process_event(const epoll_event&); */
 	bool process(http *);
 
 	void epoll_send_wakeup();

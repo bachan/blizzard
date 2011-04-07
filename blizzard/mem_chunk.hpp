@@ -4,6 +4,7 @@
 #include <errno.h>
 #include <fcntl.h>
 #include <string.h>
+#include <coda/error.hpp>
 #include "config.hpp"
 #include "utils.hpp"
 

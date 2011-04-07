@@ -183,7 +183,7 @@ inline bool mem_chunk<data_size>::write_to_fd(int fd, bool& can_write, bool& wan
 			ssize_t    wr = write(fd, cur_page->page + cur_page->current, to_write);
 			if(-1 == wr)
 			{
-				/* log_debug("process/read error: '%s'", print_errno().c_str()); */
+				/* log_debug("process/read error: '%s'", coda_strerror(errno)); */
 
 				switch(errno)
 				{
@@ -256,7 +256,7 @@ inline bool mem_chunk<data_size>::read_from_fd(int fd, bool& can_read, bool& wan
 			ssize_t    rd = read(fd, cur_page->page + cur_page->get_data_size(), to_read);
 			if(-1 == rd)
 			{
-			/* log_debug("process/read error: '%s'", print_errno().c_str()); */
+			/* log_debug("process/read error: '%s'", coda_strerror(errno)); */
 				if(EAGAIN == errno)
 				{
 					can_read = false;
@@ -416,7 +416,7 @@ inline bool mem_block::write_to_fd(int fd, bool& can_write, bool& want_write, bo
 			ssize_t    wr = write(fd, page + current, to_write);
 			if(-1 == wr)
 			{
-				/* log_debug("process/read error: '%s'", print_errno().c_str()); */
+				/* log_debug("process/read error: '%s'", coda_strerror(errno)); */
 
 				switch(errno)
 				{

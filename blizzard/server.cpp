@@ -4,7 +4,7 @@
 #include <signal.h>
 #include <stdarg.h>
 #include <unistd.h>
-#include <sys/epoll.h>
+/* #include <sys/epoll.h> */
 #include <sys/resource.h>
 #include <sys/socket.h>
 #include <sys/time.h>
@@ -15,6 +15,7 @@
 
 blizzard::statistics stats;
 
+#if 0
 inline std::string events2string(int events)
 {
 	std::string rep;
@@ -98,6 +99,7 @@ inline std::string events2string(const epoll_event& ev)
 
 	return rep;
 }
+#endif /*  */
 
 namespace blizzard
 {
@@ -202,10 +204,7 @@ void blizzard::server::init_threads()
 		}
 		else
 		{
-			char s[256];
-			char buff[100];
-			snprintf(s, 256, "error creating easy thread #%d : %s", i, strerror_r(r, buff, 100));
-			throw std::logic_error(s);
+			throw coda_error("error creating easy thread #%d: %s", i, coda_strerror(r));
 		}
 	}
 
@@ -222,10 +221,7 @@ void blizzard::server::init_threads()
 		}
 		else
 		{
-			char s[256];
-			char buff[100];
-			snprintf(s, 256, "error creating hard thread #%d : %s", i, strerror_r(r, buff, 100));
-			throw std::logic_error(s);
+			throw coda_error("error creating hard thread #%d: %s", i, coda_strerror(r));
 		}
 	}
 
@@ -296,8 +292,7 @@ void blizzard::server::epoll_send_wakeup()
 		ret = write(epoll_wakeup_osock, b, 1);
 		if(ret < 0 && errno != EINTR)
 		{
-			char buff[1024];
-			log_error("epoll_send_wakeup():write failure: '%s'", strerror_r(errno, buff, 1024));
+			log_error("epoll_send_wakeup(): write failure: %s", coda_strerror(errno));
 		}
 	}
 	while(ret < 0);
@@ -314,8 +309,7 @@ void blizzard::server::epoll_recv_wakeup()
 		ret = read(epoll_wakeup_isock, b, 1024);
 		if(ret < 0 && errno != EAGAIN && errno != EINTR)
 		{
-			char buff[1024];
-			log_error("epoll_recv_wakeup()::read failure: '%s'", strerror_r(errno, buff, 1024));
+			log_error("epoll_recv_wakeup(): read failure: %s", coda_strerror(errno));
 		}
 	}
 	while(ret == 1024 || errno == EINTR);
@@ -523,7 +517,7 @@ static void silent_callback(EV_P_ ev_timer *w, int tev)
 	if (0 != coda_terminate)
 	{
 		ev_timer_stop(EV_A_ w);
-		ev_unloop(EV_A_ EVUNLOOP_ALL);
+		ev_break(EV_A_ EVUNLOOP_ALL);
 		return;
 	}
 
@@ -605,8 +599,7 @@ void blizzard::server::prepare()
 	int pipefd[2];
 	if(::pipe(pipefd) == -1)
 	{
-		char buff[1024];
-		throw std::logic_error((std::string)"server::prepare():pipe() failed : " + strerror_r(errno, buff, 1024));
+		throw coda_error("server::prepare(): pipe() failed: %s", coda_strerror(errno));
 	}
 
 	epoll_wakeup_osock = pipefd[1];

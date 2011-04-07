@@ -2,19 +2,14 @@
 #include <stdlib.h>
 #include <netdb.h>
 #include <strings.h>
+#include <sys/types.h>
+#include <sys/socket.h>
 #include "http.hpp"
 #include "server.hpp"
 
 //TODO: Error messages support etc
-//TODO: 'Expect: 100-continue' header support for POST requests
+//TODO: Expect: 100-continue header support for POST requests
 
-//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ FOR DEBUG PURPOSES ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-std::string print_errno()
-{
-	char b[1024];
-	return strerror_r(errno, b, 1024);
-}
-//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 struct HTTP_CODES_DESC
 {
 	int code;
