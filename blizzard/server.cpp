@@ -4,106 +4,20 @@
 #include <signal.h>
 #include <stdarg.h>
 #include <unistd.h>
-/* #include <sys/epoll.h> */
 #include <sys/resource.h>
 #include <sys/socket.h>
 #include <sys/time.h>
 #include <pthread.h>
 #include <stdexcept>
 #include <coda/daemon.h>
+#include <coda/socket.h>
 #include "server.hpp"
 
 blizzard::statistics stats;
 
-#if 0
-inline std::string events2string(int events)
-{
-	std::string rep;
-
-	if(events & EPOLLIN)
-	{
-		if(!rep.empty())
-			rep += " | EPOLLIN";
-		else
-			rep += " EPOLLIN";
-	}
-
-	if(events & EPOLLOUT)
-	{
-		if(!rep.empty())
-			rep += " | EPOLLOUT";
-		else
-			rep += " EPOLLOUT";
-	}
-
-	/*if(events & EPOLLRDHUP)
-	{
-		if(!rep.empty())
-			rep += " | EPOLLRDHUP";
-		else
-			rep += " EPOLLRDHUP";
-	}*/
-
-	if(events & EPOLLPRI)
-	{
-		if(!rep.empty())
-			rep += " | EPOLLPRI";
-		else
-			rep += " EPOLLPRI";
-	}
-
-	if(events & EPOLLERR)
-	{
-		if(!rep.empty())
-			rep += " | EPOLLERR";
-		else
-			rep += " EPOLLERR";
-	}
-
-	if(events & EPOLLHUP)
-	{
-		if(!rep.empty())
-			rep += " | EPOLLHUP";
-		else
-			rep += " EPOLLHUP";
-	}
-
-	if(events & EPOLLET)
-	{
-		if(!rep.empty())
-			rep += " | EPOLLET";
-		else
-			rep += " EPOLLET";
-	}
-
-	if(events & EPOLLONESHOT)
-	{
-		if(!rep.empty())
-			rep += " | EPOLLONESHOT";
-		else
-			rep += " EPOLLONESHOT";
-	}
-
-	return  "[" + rep + " ]";
-}
-
-inline std::string events2string(const epoll_event& ev)
-{
-	std::string rep = "[";
-
-	char buff[256];
-	snprintf(buff, 256, "%d", ev.data.fd);
-	rep += buff;
-
-	rep += "]: " + events2string(ev.events);
-
-	return rep;
-}
-#endif /*  */
-
 namespace blizzard
 {
-	void* epoll_loop_function(void* ptr);
+	void* event_loop_function(void* ptr);
 	void*  easy_loop_function(void* ptr);
 	void*  hard_loop_function(void* ptr);
 	void* stats_loop_function(void* ptr);
@@ -113,9 +27,8 @@ namespace blizzard
 blizzard::server::server()
 	: incoming_sock(-1)
 	, stats_sock(-1)
-	, epoll_sock(-1)
-	, epoll_wakeup_isock(-1)
-	, epoll_wakeup_osock(-1)
+	, wakeup_isock(-1)
+	, wakeup_osock(-1)
 	, threads_num(0)
 	, start_time(0)
 {
@@ -158,14 +71,14 @@ blizzard::server::~server()
 
 void blizzard::server::init_threads()
 {
-	if(0 == pthread_create(&epoll_th, NULL, &epoll_loop_function, this))
+	if(0 == pthread_create(&event_th, NULL, &event_loop_function, this))
 	{
-		log_debug("epoll thread created");
+		log_debug("event thread created");
 		threads_num++;
 	}
 	else
 	{
-		throw std::logic_error("error creating epoll thread");
+		throw coda_error("error creating event thread");
 	}
 
 	if(0 == pthread_create(&idle_th, NULL, &idle_loop_function, this))
@@ -175,7 +88,7 @@ void blizzard::server::init_threads()
 	}
 	else
 	{
-		throw std::logic_error("error creating idle thread");
+		throw coda_error("error creating idle thread");
 	}
 
 	if(0 == pthread_create(&stats_th, NULL, &stats_loop_function, this))
@@ -185,7 +98,7 @@ void blizzard::server::init_threads()
 	}
 	else
 	{
-		throw std::logic_error("error creating stats thread");
+		throw coda_error("error creating stats thread");
 	}
 	log_info("%d internal threads created", threads_num);
 
@@ -230,13 +143,13 @@ void blizzard::server::init_threads()
 
 void blizzard::server::join_threads()
 {
-	if(0 == threads_num)
+	if (0 == threads_num)
 	{
 		return;
 	}
 
-	pthread_join(epoll_th,  0);
-	log_info("epoll_th joined");
+	pthread_join(event_th,  0);
+	log_info("event_th joined");
 	threads_num--;
 
 	pthread_join(idle_th,  0);
@@ -281,35 +194,35 @@ void blizzard::server::fire_all_threads()
 	log_debug("fire_all_threads");
 }
 
-void blizzard::server::epoll_send_wakeup()
+void blizzard::server::send_wakeup()
 {
-	log_debug("epoll_send_wakeup()");
+	log_debug("send_wakeup()");
 	char b[1] = {'w'};
 
 	int ret;
 	do
 	{
-		ret = write(epoll_wakeup_osock, b, 1);
+		ret = write(wakeup_osock, b, 1);
 		if(ret < 0 && errno != EINTR)
 		{
-			log_error("epoll_send_wakeup(): write failure: %s", coda_strerror(errno));
+			log_error("send_wakeup(): write failure: %s", coda_strerror(errno));
 		}
 	}
 	while(ret < 0);
 }
 
-void blizzard::server::epoll_recv_wakeup()
+void blizzard::server::recv_wakeup()
 {
-	log_debug("epoll_recv_wakeup()");
+	log_debug("recv_wakeup()");
 	char b[1024];
 
 	int ret;
 	do
 	{
-		ret = read(epoll_wakeup_isock, b, 1024);
+		ret = read(wakeup_isock, b, 1024);
 		if(ret < 0 && errno != EAGAIN && errno != EINTR)
 		{
-			log_error("epoll_recv_wakeup(): read failure: %s", coda_strerror(errno));
+			log_error("recv_wakeup(): read failure: %s", coda_strerror(errno));
 		}
 	}
 	while(ret == 1024 || errno == EINTR);
@@ -440,7 +353,7 @@ bool blizzard::server::push_done(http * el)
 
 	pthread_mutex_unlock(&done_mutex);
 
-	epoll_send_wakeup();
+	send_wakeup();
 
 	return true;
 }
@@ -473,14 +386,9 @@ bool blizzard::server::pop_done(http** el)
 
 void blizzard::server::load_config(const char* xml_in, bool is_daemon)
 {
-	if(::access(xml_in, F_OK) < 0)
+	if (0 > ::access(xml_in, F_OK))
 	{
-		std::string s = "access('" + config.blz.log_file_name + "') failed : ";
-		char buff[1024];
-
-		s += strerror_r(errno, buff, 1024); 
-
-		throw std::logic_error(s);
+		throw coda_error("access(%s) failed: %s", config.blz.log_file_name.c_str(), coda_strerror(errno));
 	}
 
 	config.clear();
@@ -493,9 +401,9 @@ void blizzard::server::load_config(const char* xml_in, bool is_daemon)
 	
 	if (0 > (res = log_create_from_str(config.blz.log_file_name.c_str(), config.blz.log_level.c_str())))
 	{
-		throw coda_errno (errno, "logger init from (%s, %s) failed"
-			, config.blz.log_file_name.c_str()
-			, config.blz.log_level.c_str()
+		throw coda_errno(errno, "logger init from (%s, %s) failed",
+			config.blz.log_file_name.c_str(),
+			config.blz.log_level.c_str()
 		);
 	}
 }
@@ -509,7 +417,7 @@ static void incoming_callback(EV_P_ ev_io *w, int tev)
 static void wakeup_callback(EV_P_ ev_io *w, int tev)
 {
 	blizzard::server *s = (blizzard::server *) ev_userdata(loop);
-	s->epoll_recv_wakeup();
+	s->recv_wakeup();
 }
 
 static void silent_callback(EV_P_ ev_timer *w, int tev)
@@ -539,7 +447,7 @@ void blizzard::server::accept_connection()
 	{
 		log_debug("accept_new_connection: %d from %s", client, inet_ntoa(ip));
 
-		lz_utils::set_nonblocking(client);
+		coda_set_nonblk(client, 1);
 
 		http *con = fds.create(client, ip);
 
@@ -558,9 +466,7 @@ void blizzard::server::accept_connection()
 void blizzard::server::prepare()
 {
 	factory.load_module(config.blz.plugin);
-#if 0
-	epoll_sock = init_epoll();
-#endif
+	// epoll_sock = init_epoll();
 	loop = ev_default_loop(0);
 	ev_set_userdata(loop, this); /* hack to simplify things in http.cpp, couldn't be REALLY needed, if blizzard were written more libev friendly */
 	ev_set_io_collect_interval(loop, 0.01); /* hack to emulate old blizzard behaviour (epolling with timeout 100ms (we set it to 50ms here)) */
@@ -570,15 +476,13 @@ void blizzard::server::prepare()
 	//add incoming sock
 
 	incoming_sock = lz_utils::add_listener(config.blz.plugin.ip.c_str(), config.blz.plugin.port.c_str(), LISTEN_QUEUE_SZ);
-	if(-1 != incoming_sock)
+	if (-1 != incoming_sock)
 	{
 		log_info("blizzard is bound to %s:%s", config.blz.plugin.ip.c_str(), config.blz.plugin.port.c_str());
 	}
 
-	lz_utils::set_nonblocking(incoming_sock);
-#if 0
-	add_epoll_action(incoming_sock, EPOLL_CTL_ADD, EPOLLIN);
-#endif
+	coda_set_nonblk(incoming_sock, 1);
+	// add_epoll_action(incoming_sock, EPOLL_CTL_ADD, EPOLLIN);
 	ev_io_init(&incoming_watcher, incoming_callback, incoming_sock, EV_READ);
 	ev_io_start(loop, &incoming_watcher);
 
@@ -586,7 +490,7 @@ void blizzard::server::prepare()
 	//add stats sock
 
 	stats_sock = lz_utils::add_listener(config.blz.stats.ip.c_str(), config.blz.stats.port.c_str());
-	if(-1 != stats_sock)
+	if (-1 != stats_sock)
 	{
 		log_info("blizzard statistics is bound to %s:%s", config.blz.stats.ip.c_str(), config.blz.stats.port.c_str());
 	}
@@ -597,19 +501,17 @@ void blizzard::server::prepare()
 	//add epoll wakeup fd
 
 	int pipefd[2];
-	if(::pipe(pipefd) == -1)
+	if (::pipe(pipefd) == -1)
 	{
 		throw coda_error("server::prepare(): pipe() failed: %s", coda_strerror(errno));
 	}
 
-	epoll_wakeup_osock = pipefd[1];
-	epoll_wakeup_isock = pipefd[0];
+	wakeup_osock = pipefd[1];
+	wakeup_isock = pipefd[0];
 
-	lz_utils::set_nonblocking(epoll_wakeup_isock);
-#if 0
-	add_epoll_action(epoll_wakeup_isock, EPOLL_CTL_ADD, EPOLLIN | EPOLLET);
-#endif
-	ev_io_init(&wakeup_watcher, wakeup_callback, epoll_wakeup_isock, EV_READ);
+	coda_set_nonblk(wakeup_isock, 1);
+	// add_epoll_action(wakeup_isock, EPOLL_CTL_ADD, EPOLLIN | EPOLLET);
+	ev_io_init(&wakeup_watcher, wakeup_callback, wakeup_isock, EV_READ);
 	ev_io_start(loop, &wakeup_watcher);
 
 	ev_timer_init(&silent_timer, silent_callback, 0, 1);
@@ -620,35 +522,27 @@ void blizzard::server::finalize()
 {
 	if (-1 != incoming_sock)
 	{
-		lz_utils::close_connection(incoming_sock);
+		close(incoming_sock);
 		incoming_sock = -1;
 	}
 
 	if (-1 != stats_sock)
 	{
-		lz_utils::close_connection(stats_sock);
+		close(stats_sock);
 		stats_sock = -1;
 	}
 
-	if (-1 != epoll_wakeup_isock)
+	if (-1 != wakeup_isock)
 	{
-		close(epoll_wakeup_isock);
-		epoll_wakeup_isock = -1;
+		close(wakeup_isock);
+		wakeup_isock = -1;
 	}
 
-	if (-1 != epoll_wakeup_osock)
+	if (-1 != wakeup_osock)
 	{
-		close(epoll_wakeup_osock);
-		epoll_wakeup_osock = -1;
+		close(wakeup_osock);
+		wakeup_osock = -1;
 	}
-
-#if 0
-	if (-1 != epoll_sock)
-	{
-		close(epoll_sock);
-		epoll_sock = -1;
-	}
-#endif
 
 	factory.stop_module();
 }
@@ -659,10 +553,9 @@ int blizzard::server::init_epoll()
 	log_debug("init_epoll");
 
 	int res = epoll_create(HINT_EPOLL_SIZE);
-	if(-1 == res)
+	if (-1 == res)
 	{
-		char buff[1024];
-		throw std::logic_error((std::string)"epoll_create : " + strerror_r(errno, buff, 1024));
+		throw coda_error("epoll_create: %s", coda_strerror(errno));
 	}
 
 	log_debug("epoll inited: %d", res);
@@ -683,38 +576,22 @@ void blizzard::server::add_epoll_action(int fd, int action, uint32_t mask)
 	evt.data.fd = fd;
 
 	int r;
+
 	do
 	{
 		r = epoll_ctl(epoll_sock, action, fd, &evt);
 	}
-	while(r < 0 && errno == EINTR);
+	while (0 > r && errno == EINTR);
 
 	if (-1 == r)
 	{
-		char buff[1024];
-		std::string err_str = "add_epoll_action:epoll_ctl(";
-
-		switch(action)
-		{
-			case EPOLL_CTL_ADD:
-				err_str += "EPOLL_CTL_ADD";
-				break;
-			case EPOLL_CTL_MOD:
-				err_str += "EPOLL_CTL_MOD";
-				break;
-			case EPOLL_CTL_DEL:
-				err_str += "EPOLL_CTL_DEL";
-				break;
-		}
-		err_str += ", " + events2string(evt.events) + ") : ";
-		err_str += strerror_r(errno, buff, 1024);
-
-		throw std::logic_error(err_str);
+		throw coda_error("add_epoll_action: epoll_ctl(%d, %d): %s",
+			action, evt.events, coda_strerror(errno));
 	}
 }
 #endif
 
-void blizzard::server::epoll_processing_loop()
+void blizzard::server::event_processing_loop()
 {
 	http * done_task = 0;
 	while(pop_done(&done_task))
@@ -737,19 +614,19 @@ void blizzard::server::epoll_processing_loop()
 
 #if 0
 	int nfds = 0;
+
 	do
 	{
 		nfds = epoll_wait(epoll_sock, events, EPOLL_EVENTS, fds.min_timeout()/*EPOLL_TIMEOUT*/);
 	}
-	while(nfds == -1 && (errno == EINTR || errno == EAGAIN));
+	while (-1 == nfds && (errno == EINTR || errno == EAGAIN));
 
-	if(-1 == nfds)
+	if (-1 == nfds)
 	{
-		char buff[1024];
-		throw std::logic_error((std::string)"epoll_wait : " + strerror_r(errno, buff, 1024));
+		throw coda_error("epoll_wait: %s", coda_strerror(errno));
 	}
 
-	if(nfds)
+	if (nfds)
 	{
 		if(nfds > 1)
 		{
@@ -997,7 +874,7 @@ void blizzard::server::idle_processing_loop()
 	}
 }
 
-void *blizzard::epoll_loop_function(void *ptr)
+void *blizzard::event_loop_function(void *ptr)
 {
 	blizzard::server *srv = (blizzard::server *) ptr;
 
@@ -1005,13 +882,13 @@ void *blizzard::epoll_loop_function(void *ptr)
 	{
 		while (0 == coda_terminate && 0 == coda_changecfg)
 		{
-			srv->epoll_processing_loop();
+			srv->event_processing_loop();
 		}
 	}
 	catch (const std::exception &e)
 	{
 		coda_terminate = 1;
-		log_crit("epoll_loop: exception: %s", e.what());
+		log_crit("event_loop: exception: %s", e.what());
 	}
 
 	srv->fire_all_threads();

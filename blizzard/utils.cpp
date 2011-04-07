@@ -28,34 +28,16 @@ uint64_t lz_utils::fine_clock()
 	return (tv.tv_sec * 1000000LLU + tv.tv_usec);
 }
 
-void lz_utils::close_connection(int fd)
-{
-	/* log_debug("close_connection %d", fd); */
-	shutdown(fd, SHUT_RDWR);
-	close(fd);
-}
-
 void lz_utils::set_socket_timeout(int fd, long timeout)
 {
 	struct timeval tv;
 	tv.tv_sec = 0;
 	tv.tv_usec = timeout;
 
-	if (setsockopt(fd, SOL_SOCKET, SO_RCVTIMEO, (struct timeval *)&tv,sizeof(struct timeval)) < 0)
+	if (setsockopt(fd, SOL_SOCKET, SO_RCVTIMEO, (struct timeval *)&tv, sizeof(struct timeval)) < 0)
 	{
-		log_err(errno, "setsockopt(SO_RCVTIMEO)");
+		log_error("setsockopt(SO_RCVTIMEO): %s", coda_strerror(errno));
 	}
-}
-
-int lz_utils::set_nonblocking(int fd)
-{
-	log_debug("set_nonblocking %d", fd);
-
-	int flags = fcntl(fd, F_GETFL, 0);
-	if ((flags == -1) || (flags & O_NONBLOCK))
-		return flags;
-	else
-		return fcntl(fd, F_SETFL, flags | O_NONBLOCK);
 }
 
 int lz_utils::add_listener(const char * host_desc, const char * port_desc, int listen_q_sz)
@@ -69,12 +51,9 @@ int lz_utils::add_listener(const char * host_desc, const char * port_desc, int l
 	struct addrinfo* addr = 0;
 	int repl = getaddrinfo(host_desc, port_desc, &hints, &addr);
 
-	if(0 != repl || 0 == addr)
+	if (0 != repl || 0 == addr)
 	{
-		throw std::logic_error((std::string)"getaddrinfo(" +
-					(std::string)host_desc + ":" +
-					(std::string)port_desc +
-					") failed : " + gai_strerror(repl));
+		throw coda_error("getaddrinfo(%s:%s) failed: %s", host_desc, port_desc, gai_strerror(repl));
 	}
 
 	int fd = socket(addr->ai_family, addr->ai_socktype, addr->ai_protocol);
@@ -87,14 +66,14 @@ int lz_utils::add_listener(const char * host_desc, const char * port_desc, int l
 	int is_true = 1;
 	if (setsockopt(fd, SOL_SOCKET, SO_REUSEADDR, &is_true, sizeof(is_true)) < 0)
 	{
-		close_connection(fd);
+		close(fd);
 		
 		throw coda_error("setsockopt - %s", coda_strerror(errno));
 	}
 
 	if (bind(fd, addr->ai_addr, addr->ai_addrlen) < 0)
 	{
-		close_connection(fd);
+		close(fd);
 		
 		throw coda_error("bind(%s:%s) failed: %s", host_desc, port_desc, coda_strerror(errno));
 	}
@@ -108,18 +87,9 @@ int lz_utils::add_listener(const char * host_desc, const char * port_desc, int l
 
 	if (listen(fd, listen_q_sz) < 0)
 	{
-		close_connection(fd);
+		close(fd);
 
-		throw coda_errno (errno, "listen(%s:%s) failed",
-			host_desc, port_desc);
-#if 0
-		char buff[1024];
-		throw std::logic_error((std::string)"listen(" +
-				(std::string)host_desc + ":" +
-				(std::string)port_desc +
-				(std::string)") failed : " +
-				(std::string)strerror_r(errno, buff, 1024));
-#endif
+		throw coda_errno(errno, "listen(%s:%s) failed", host_desc, port_desc);
 	}
 
 	return fd;
@@ -136,7 +106,7 @@ int lz_utils::add_sender(const char * host_desc, const char * port_desc)
 	struct addrinfo* addr = 0;
 	int repl = getaddrinfo(host_desc, port_desc, &hints, &addr);
 
-	if(0 != repl || 0 == addr)
+	if (0 != repl || 0 == addr)
 	{
 		throw coda_error("getaddrinfo(%s:%s) failed: %s", host_desc, port_desc, gai_strerror(repl));
 	}
@@ -148,7 +118,7 @@ int lz_utils::add_sender(const char * host_desc, const char * port_desc)
 		throw coda_error("socket error: %s", coda_strerror(errno));
 	}
 
-	if(connect(fd, addr->ai_addr, addr->ai_addrlen) < 0)
+	if (connect(fd, addr->ai_addr, addr->ai_addrlen) < 0)
 	{
 		throw coda_error("connect(%s:%s) failed: %s", host_desc, port_desc, coda_strerror(errno));
 	}
@@ -168,11 +138,11 @@ int lz_utils::accept_new_connection(int fd, struct in_addr& ip)
 	{
 		connection = accept(fd, (struct sockaddr *) &sa, &lsa);
 	}
-	while(connection < 0 && errno == EINTR);
+	while (connection < 0 && errno == EINTR);
 
-	if(connection < 0 && errno != EAGAIN)
+	if (connection < 0 && errno != EAGAIN)
 	{
-		log_err(errno, "accept failure");
+		log_error("accept failure: %s", coda_strerror(errno));
 	}
 
 	ip = sa.sin_addr;

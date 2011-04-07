@@ -3,7 +3,6 @@
 
 #include <ev.h>
 #include <stdarg.h>
-/* #include <sys/epoll.h> */
 #include <stdexcept>
 #include <deque>
 #include "config.hpp"
@@ -23,9 +22,7 @@ struct server
 	enum {HINT_EPOLL_SIZE = 10000};
 	enum {EPOLL_EVENTS = 2000};
 
-	/* struct epoll_event events[EPOLL_EVENTS]; */
-
-	pthread_t epoll_th;
+	pthread_t event_th;
 	std::vector<pthread_t> easy_th;
 	std::vector<pthread_t> hard_th;
 	pthread_t stats_th;
@@ -49,9 +46,8 @@ struct server
 
 	int incoming_sock;
 	int stats_sock;
-	int epoll_sock;
-	int epoll_wakeup_isock;
-	int epoll_wakeup_osock;
+	int wakeup_isock;
+	int wakeup_osock;
 	int threads_num;
 	time_t start_time;
 
@@ -64,37 +60,32 @@ struct server
 
 	/* network part */
 
-	int  init_epoll();
-	void add_epoll_action(int fd, int action, uint32_t mask);
 	void timeouts_kill_oldest();
 
-	void epoll_processing_loop();
+	void event_processing_loop();
 	void  easy_processing_loop();
 	void  hard_processing_loop();
 	void  idle_processing_loop();
 
-	//void stats_print();
-
 	/* pthreads part */
 
-	/* bool process_event(const epoll_event&); */
 	bool process(http *);
 
-	void epoll_send_wakeup();
-	void epoll_recv_wakeup();
+	void send_wakeup();
+	void recv_wakeup();
 
-	bool push_easy(http *);
+	bool push_easy(http*);
 	bool pop_easy_or_wait(http**);
 
-	bool push_hard(http *);
+	bool push_hard(http*);
 	bool pop_hard_or_wait(http**);
 
-	bool push_done(http *);
+	bool push_done(http*);
 	bool pop_done(http**);
 
 	void fire_all_threads();
 
-	friend void* epoll_loop_function(void* ptr);
+	friend void* event_loop_function(void* ptr);
 	friend void*  easy_loop_function(void* ptr);
 	friend void*  hard_loop_function(void* ptr);
 	friend void* stats_loop_function(void* ptr);

@@ -5,7 +5,6 @@ blizzard::plugin_factory::plugin_factory()
 	: loaded_module(NULL)
 	, plugin_handle(NULL)
 {
-
 }
 
 blizzard::plugin_factory::~plugin_factory()
@@ -26,15 +25,12 @@ void blizzard::plugin_factory::load_module(const blz_config::BLZ::PLUGIN& pd)
 
 		if (loaded_module == 0)
 		{
-			char buff[2048];
-			snprintf(buff, 2048, "loading module '%s' failed: %s", pd.library.c_str(), dlerror());
-
-			throw std::logic_error(buff);
+			throw coda_error("loading module %s failed: %s", pd.library.c_str(), dlerror());
 		}
 	}
 	else
 	{
-		throw std::logic_error("module already loaded!!!");
+		throw coda_error("module already loaded");
 	}
 
 	dlerror();
@@ -48,30 +44,25 @@ void blizzard::plugin_factory::load_module(const blz_config::BLZ::PLUGIN& pd)
 	conv.v = dlsym(loaded_module, "get_plugin_instance");
 	blz_plugin* (*func)() = conv.f;
 
-	const char * errmsg = dlerror();
-	if(0 != errmsg)
-	{
-		char buff[2048];
-		snprintf(buff, 2048, "error searching 'get_plugin_instance' in module '%s': '%s'", pd.library.c_str(), errmsg);
+	const char* errmsg = dlerror();
 
-		throw std::logic_error(buff);
+	if (0 != errmsg)
+	{
+		throw coda_error("error searching 'get_plugin_instance' in module %s: %s", pd.library.c_str(), errmsg);
 	}
 
 	plugin_handle = (*func)();
 
-	if(0 == plugin_handle)
+	if (0 == plugin_handle)
 	{
-		char buff[2048];
-		snprintf(buff, 2048, "module '%s': instance of plugin is not created", pd.library.c_str());
-
-		throw std::logic_error(buff);
+		throw coda_error("module %s: instance of plugin is not created", pd.library.c_str());
 	}
 
 	if (BLZ_OK != plugin_handle->load(pd.params.c_str()))
 	{
 		delete plugin_handle;
 		plugin_handle = 0;
-		throw std::logic_error("Plugin init failed");
+		throw coda_error("module init failed");
 	}
 }
 
@@ -98,7 +89,7 @@ blz_plugin* blizzard::plugin_factory::open_plugin() const
 
 void blizzard::plugin_factory::idle()
 {
-	if(plugin_handle)
+	if (plugin_handle)
 	{
 		plugin_handle->idle();
 	}
