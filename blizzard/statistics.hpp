@@ -1,5 +1,5 @@
-#ifndef __LIZARD_STATS_HPP___
-#define __LIZARD_STATS_HPP___
+#ifndef __BLIZZARD_STATISTICS_HPP__
+#define __BLIZZARD_STATISTICS_HPP__
 
 #include <stdint.h>
 #include <time.h>
@@ -44,13 +44,13 @@ public:
 	void report_hard_queue_len(size_t len);
 	void report_done_queue_len(size_t len); 
 
-	double get_min_lifetime()const;
-	double get_mid_lifetime()const;
-	double get_max_lifetime()const;
+	double get_min_lifetime() const;
+	double get_mid_lifetime() const;
+	double get_max_lifetime() const;
 
-	double get_rps()const;
+	double get_rps() const;
 };
 
 } /* namespace blizzard */
 
-#endif /* __LIZARD_STATS_HPP___ */
+#endif /* __BLIZZARD_STATISTICS_HPP__ */

@@ -294,7 +294,7 @@ bool blizzard::server::push_hard(http * el)
 
 	stats.report_hard_queue_len(hq_sz);
 
-	if(config.blz.plugin.hard_queue_limit == 0 || (hq_sz < (size_t)config.blz.plugin.hard_queue_limit))
+	if (config.blz.plugin.hard_queue_limit == 0 || (hq_sz < (size_t)config.blz.plugin.hard_queue_limit))
 	{
 		hard_queue.push_back(el);
 
@@ -320,7 +320,7 @@ bool blizzard::server::pop_hard_or_wait(http** el)
 	
 	stats.report_hard_queue_len(hq_sz);
 
-	if(hq_sz)
+	if (hq_sz)
 	{
 		*el = hard_queue.front();
 
@@ -368,7 +368,7 @@ bool blizzard::server::pop_done(http** el)
 
 	stats.report_done_queue_len(dq_sz);
 
-	if(dq_sz)
+	if (dq_sz)
 	{
 		*el = done_queue.front();
 
@@ -386,11 +386,6 @@ bool blizzard::server::pop_done(http** el)
 
 void blizzard::server::load_config(const char* xml_in, bool is_daemon)
 {
-	if (0 > ::access(xml_in, F_OK))
-	{
-		throw coda_error("access(%s) failed: %s", config.blz.log_file_name.c_str(), coda_strerror(errno));
-	}
-
 	config.clear();
 	config.load_from_file(xml_in);
 	config.check();
@@ -738,17 +733,17 @@ bool blizzard::server::process_event(const epoll_event& ev)
 
 bool blizzard::server::process(http * con)
 {
-	if(!con->is_locked())
+	if (!con->is_locked())
 	{
 		con->process();
 
-		if(con->state() == http::sReadyToHandle)
+		if (con->state() == http::sReadyToHandle)
 		{
 			log_debug("push_easy(%d)", con->get_fd());
 
 			con->lock();
 
-			if(false == push_easy(con))
+			if (false == push_easy(con))
 			{
 				log_debug("easy queue full: easy_queue_size == %d", config.blz.plugin.easy_queue_limit);
 
@@ -759,7 +754,7 @@ bool blizzard::server::process(http * con)
 				push_done(con);
 			}
 		}
-		else if(con->state() == http::sDone || con->state() == http::sUndefined)
+		else if (con->state() == http::sDone || con->state() == http::sUndefined)
 		{
 			log_debug("%d is done, closing write side of connection", con->get_fd());
 
@@ -778,11 +773,11 @@ void blizzard::server::easy_processing_loop()
 
 	http* task = 0;
 
-	if(pop_easy_or_wait(&task))
+	if (pop_easy_or_wait(&task))
 	{
 		log_debug("blizzard::easy_loop_function.fd = %d", task->get_fd());
 
-		switch(plugin->easy(task))
+		switch (plugin->easy(task))
 		{
 		case BLZ_OK:
 			log_debug("easy_loop: processed %d", task->get_fd());
@@ -918,7 +913,7 @@ void *blizzard::easy_loop_function(void *ptr)
 
 void *blizzard::hard_loop_function(void *ptr)
 {
-	 blizzard::server *srv = (blizzard::server *) ptr;
+	blizzard::server *srv = (blizzard::server *) ptr;
 
 	try
 	{
@@ -967,14 +962,13 @@ void *blizzard::stats_loop_function(void *ptr)
 	{
 		while (0 == coda_terminate && 0 == coda_changecfg)
 		{
-			if(srv->stats_sock != -1)
+			if (srv->stats_sock != -1)
 			{
 				struct in_addr ip;
 				int stats_client = lz_utils::accept_new_connection(srv->stats_sock, ip);
 
-				if(stats_client >= 0)
+				if (stats_client >= 0)
 				{
-
 					lz_utils::set_socket_timeout(stats_client, 50000);
 
 					log_debug("stats: accept_new_connection: %d from %s", stats_client, inet_ntoa(ip));
@@ -1012,7 +1006,7 @@ void *blizzard::stats_loop_function(void *ptr)
 								"\t\t<hard>%d</hard>\n\t\t<max_hard>%d</max_hard>\n\t\t<done>%d</done>\n"
 								"\t\t<max_done>%d</max_done>\n\t</queues>\n",
 									(int)stats.easy_queue_len,
-																		(int)stats.easy_queue_max_len,
+									(int)stats.easy_queue_max_len,
 									(int)stats.hard_queue_len,
 									(int)stats.hard_queue_max_len,
 									(int)stats.done_queue_len,
@@ -1046,7 +1040,6 @@ void *blizzard::stats_loop_function(void *ptr)
 					}
 
 					stats_parser.destroy();
-
 					stats.process();
 				}
 			}

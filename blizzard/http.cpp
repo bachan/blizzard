@@ -115,11 +115,9 @@ blizzard::http::http() :
 
 blizzard::http::~http()
 {
-	if(-1 != fd)
+	if (-1 != fd)
 	{
-		shutdown(fd, SHUT_RDWR);
 		close(fd);
-
 		fd = -1;
 	}
 
@@ -167,7 +165,7 @@ static void watcher_callback(EV_P_ ev_io *w, int tev)
 
 void blizzard::http::init(int new_fd, const struct in_addr& ip)
 {
-	if(-1 == fd)
+	if (-1 == fd)
 	{
 		fd = new_fd;
 	}
