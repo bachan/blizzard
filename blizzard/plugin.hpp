@@ -1,13 +1,13 @@
-#ifndef __BLZ_PLUGIN_HPP__
-#define __BLZ_PLUGIN_HPP__
+#ifndef __BLIZZARD_PLUGIN_HPP__
+#define __BLIZZARD_PLUGIN_HPP__
 
 #include <stdint.h>
 #include <stdarg.h>
 #include <arpa/inet.h>
 #include <sys/types.h>
 
-#define BLZ_VERSION "0.2.4" /* major.minor.patch[.quickfix] */
-#define BLZ_VERSION_BINARY (0 << 24) + (2 << 16) + (4 << 8) + 0
+#define BLZ_VERSION "0.3.0" /* major.minor.patch[.quickfix] */
+#define BLZ_VERSION_BINARY (0 << 24) + (3 << 16) + (0 << 8) + 0
 
 #define BLZ_METHOD_UNDEF 0
 #define BLZ_METHOD_GET   1
@@ -58,4 +58,4 @@ struct blz_plugin
 
 extern "C" blz_plugin* get_plugin_instance();
 
-#endif /* __BLZ_PLUGIN_HPP__ */
+#endif /* __BLIZZARD_PLUGIN_HPP__ */

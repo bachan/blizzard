@@ -1,5 +1,5 @@
-#ifndef __BLZ_PLUGIN_FACTORY_HPP__
-#define __BLZ_PLUGIN_FACTORY_HPP__
+#ifndef __BLIZZARD_PLUGIN_FACTORY_HPP__
+#define __BLIZZARD_PLUGIN_FACTORY_HPP__
 
 #include <pthread.h>
 #include "config.hpp"
@@ -25,4 +25,4 @@ public:
 
 }
 
-#endif /* __BLZ_PLUGIN_FACTORY_HPP__ */
+#endif /* __BLIZZARD_PLUGIN_FACTORY_HPP__ */

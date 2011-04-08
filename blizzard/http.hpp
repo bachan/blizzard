@@ -1,5 +1,5 @@
-#ifndef __LIZARD_CONNECTION_HPP
-#define __LIZARD_CONNECTION_HPP
+#ifndef __BLIZZARD_HTTP_HPP__
+#define __BLIZZARD_HTTP_HPP__
 
 #include <ev.h>
 #include <stdint.h>
@@ -7,8 +7,7 @@
 #include "plugin.hpp"
 #include "utils.hpp"
 
-namespace blizzard
-{
+namespace blizzard {
 
 struct http : public blz_task
 {
@@ -18,14 +17,10 @@ public:
 	ev_io watcher;
 
 protected:
-
 	static int http_codes_num;
-
 	static const char ** http_codes;
 
-
 	enum {MAX_HEADER_ITEMS = 16};
-
 	enum {READ_HEADERS_SZ = 8192};
 	enum {WRITE_TITLE_SZ = 8192};
 	enum {WRITE_HEADERS_SZ = 4096};
@@ -143,7 +138,6 @@ public:
 	void add_response_buffer(const char* data, size_t size);
 };
 
-//---------------------------------------------------------------------------------------
 }
 
-#endif
+#endif /* __BLIZZARD_HTTP_HPP__ */

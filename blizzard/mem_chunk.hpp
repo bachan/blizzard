@@ -1,5 +1,5 @@
-#ifndef __LIZARD_MEM_CHUNK_HPP___
-#define __LIZARD_MEM_CHUNK_HPP___
+#ifndef __BLIZZARD_MEM_CHUNK_HPP__
+#define __BLIZZARD_MEM_CHUNK_HPP__
 
 #include <errno.h>
 #include <fcntl.h>
@@ -8,9 +8,7 @@
 #include "config.hpp"
 #include "utils.hpp"
 
-namespace blizzard
-{
-//---------------------------------------------------------------------------------------
+namespace blizzard {
 
 template<int data_size>
 class mem_chunk
@@ -75,10 +73,9 @@ public:
 
 	void print();
 };
-//---------------------------------------------------------------------------------------
+
 }
 
 #include "mem_chunk.tcc"
-//---------------------------------------------------------------------------------------
 
-#endif
+#endif /* __BLIZZARD_MEM_CHUNK_HPP__ */

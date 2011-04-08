@@ -11,8 +11,7 @@
 #include "timeline.hpp"
 #include "statistics.hpp"
 
-namespace blizzard
-{
+namespace blizzard {
 
 class fd_map
 {

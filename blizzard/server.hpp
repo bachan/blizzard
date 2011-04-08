@@ -1,5 +1,5 @@
-#ifndef _T_SERV_SERVER_HPP____
-#define _T_SERV_SERVER_HPP____
+#ifndef __BLIZZARD_SERVER_HPP__
+#define __BLIZZARD_SERVER_HPP__
 
 #include <ev.h>
 #include <stdarg.h>
@@ -11,10 +11,7 @@
 #include "statistics.hpp"
 #include "utils.hpp"
 
-#define aux_memberof(t,n,p) (((t*)(((unsigned char *)(p))-offsetof(t,n))))
-
-namespace blizzard
-{
+namespace blizzard {
 
 struct server
 {
@@ -28,13 +25,13 @@ struct server
 	pthread_t stats_th;
 	pthread_t idle_th;
 
-	mutable pthread_mutex_t  easy_proc_mutex;
-	mutable pthread_cond_t   easy_proc_cond;
-	mutable pthread_mutex_t  hard_proc_mutex;
-	mutable pthread_cond_t   hard_proc_cond;
+	mutable pthread_mutex_t easy_proc_mutex;
+	mutable pthread_cond_t  easy_proc_cond;
+	mutable pthread_mutex_t hard_proc_mutex;
+	mutable pthread_cond_t  hard_proc_cond;
 	mutable pthread_mutex_t stats_proc_mutex;
 	mutable pthread_cond_t  stats_proc_cond;
-	mutable pthread_mutex_t	   done_mutex;
+	mutable pthread_mutex_t	done_mutex;
 
 	std::deque<http*> easy_queue;
 	std::deque<http*> hard_queue;
@@ -107,4 +104,4 @@ public:
 
 extern blizzard::statistics stats;
 
-#endif
+#endif /* __BLIZZARD_SERVER_HPP__ */

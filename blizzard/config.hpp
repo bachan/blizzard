@@ -1,5 +1,5 @@
-#ifndef __BLZ_CONFIG_HPP__
-#define __BLZ_CONFIG_HPP__
+#ifndef __BLIZZARD_CONFIG_HPP__
+#define __BLIZZARD_CONFIG_HPP__
 
 #include <string>
 #include <inttypes.h>
@@ -170,4 +170,4 @@ struct blz_config : public coda::txml_determination_object
 	}
 };
 
-#endif /* __BLZ_CONFIG_HPP__ */
+#endif /* __BLIZZARD_CONFIG_HPP__ */
