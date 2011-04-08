@@ -143,7 +143,6 @@ void blizzard::fd_map::kill_oldest(int timeout)
 
 	stats.objects_in_http_pool = elements_pool.allocated_objects();
 	stats.pages_in_http_pool = elements_pool.allocated_pages();
-
 }
 
 int blizzard::fd_map::min_timeout() const

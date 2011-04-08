@@ -219,11 +219,9 @@ void blizzard::http::destroy()
 {
 	/* log_debug("blizzard::http::destroy(%d)", fd); */
 
-	if(-1 != fd)
+	if (-1 != fd)
 	{
-		shutdown(fd, SHUT_RDWR);
 		close(fd);
-
 		fd = -1;
 	}
 

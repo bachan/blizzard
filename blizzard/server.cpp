@@ -71,7 +71,7 @@ blizzard::server::~server()
 
 void blizzard::server::init_threads()
 {
-	if(0 == pthread_create(&event_th, NULL, &event_loop_function, this))
+	if (0 == pthread_create(&event_th, NULL, &event_loop_function, this))
 	{
 		log_debug("event thread created");
 		threads_num++;
@@ -81,7 +81,7 @@ void blizzard::server::init_threads()
 		throw coda_error("error creating event thread");
 	}
 
-	if(0 == pthread_create(&idle_th, NULL, &idle_loop_function, this))
+	if (0 == pthread_create(&idle_th, NULL, &idle_loop_function, this))
 	{
 		threads_num++;
 		log_debug("idle thread created");
@@ -91,7 +91,7 @@ void blizzard::server::init_threads()
 		throw coda_error("error creating idle thread");
 	}
 
-	if(0 == pthread_create(&stats_th, NULL, &stats_loop_function, this))
+	if (0 == pthread_create(&stats_th, NULL, &stats_loop_function, this))
 	{
 		threads_num++;
 		log_debug("stats thread created");
@@ -108,7 +108,7 @@ void blizzard::server::init_threads()
 	{
 		pthread_t th;
 		int r = pthread_create(&th, NULL, &easy_loop_function, this);
-		if(0 == r)
+		if (0 == r)
 		{
 			log_debug("easy thread created");
 			easy_th.push_back(th);
@@ -125,7 +125,7 @@ void blizzard::server::init_threads()
 	{
 		pthread_t th;
 		int r = pthread_create(&th, NULL, &hard_loop_function, this);
-		if(0 == r)
+		if (0 == r)
 		{
 			log_debug("hard thread created");
 			hard_th.push_back(th);
@@ -203,7 +203,7 @@ void blizzard::server::send_wakeup()
 	do
 	{
 		ret = write(wakeup_osock, b, 1);
-		if(ret < 0 && errno != EINTR)
+		if (ret < 0 && errno != EINTR)
 		{
 			log_error("send_wakeup(): write failure: %s", coda_strerror(errno));
 		}
@@ -220,7 +220,7 @@ void blizzard::server::recv_wakeup()
 	do
 	{
 		ret = read(wakeup_isock, b, 1024);
-		if(ret < 0 && errno != EAGAIN && errno != EINTR)
+		if (ret < 0 && errno != EAGAIN && errno != EINTR)
 		{
 			log_error("recv_wakeup(): read failure: %s", coda_strerror(errno));
 		}
@@ -237,7 +237,7 @@ bool blizzard::server::push_easy(http * el)
 	size_t eq_sz = easy_queue.size(); 
 	stats.report_easy_queue_len(eq_sz);
 
-	if(config.blz.plugin.easy_queue_limit == 0 || (eq_sz < (size_t)config.blz.plugin.easy_queue_limit))
+	if (config.blz.plugin.easy_queue_limit == 0 || (eq_sz < (size_t)config.blz.plugin.easy_queue_limit))
 	{
 		easy_queue.push_back(el);
 		res = true;
@@ -262,7 +262,7 @@ bool blizzard::server::pop_easy_or_wait(http** el)
 	
 	stats.report_easy_queue_len(eq_sz);
 
-	if(eq_sz)
+	if (eq_sz)
 	{
 		*el = easy_queue.front();
 
@@ -436,20 +436,17 @@ void blizzard::server::accept_connection()
 {
 	struct in_addr ip;
 
-	int client = lz_utils::accept_new_connection(incoming_sock, ip);
+	int client = coda_accept(incoming_sock, &ip, 1);
 
-	if(client >= 0)
+	if (client >= 0)
 	{
-		log_debug("accept_new_connection: %d from %s", client, inet_ntoa(ip));
-
-		coda_set_nonblk(client, 1);
+		log_debug("accept_connection: %d from %s", client, inet_ntoa(ip));
 
 		http *con = fds.create(client, ip);
 
 		if (NULL != con)
 		{
-			// add_epoll_action(client, EPOLL_CTL_ADD, EPOLLIN | EPOLLOUT[> | EPOLLRDHUP<] | EPOLLET);
-			con->add_watcher(loop);
+			con->add_watcher(loop); /* epoll used EPOLLET here */
 		}
 		else
 		{
@@ -461,51 +458,35 @@ void blizzard::server::accept_connection()
 void blizzard::server::prepare()
 {
 	factory.load_module(config.blz.plugin);
-	// epoll_sock = init_epoll();
+
 	loop = ev_default_loop(0);
 	ev_set_userdata(loop, this); /* hack to simplify things in http.cpp, couldn't be REALLY needed, if blizzard were written more libev friendly */
-	ev_set_io_collect_interval(loop, 0.01); /* hack to emulate old blizzard behaviour (epolling with timeout 100ms (we set it to 50ms here)) */
+	// ev_set_io_collect_interval(loop, 0.001); [> hack to emulate old blizzard behaviour (epolling with timeout 100ms (we set it to 50ms here)) <]
 	// ev_set_timeout_collect_interval(loop, 0.01);
 
-	//----------------------------
-	//add incoming sock
-
-	incoming_sock = lz_utils::add_listener(config.blz.plugin.ip.c_str(), config.blz.plugin.port.c_str(), LISTEN_QUEUE_SZ);
+	incoming_sock = coda_listen(config.blz.plugin.ip.c_str(), config.blz.plugin.port.c_str(), LISTEN_QUEUE_SZ, 1);
 	if (-1 != incoming_sock)
 	{
 		log_info("blizzard is bound to %s:%s", config.blz.plugin.ip.c_str(), config.blz.plugin.port.c_str());
 	}
-
-	coda_set_nonblk(incoming_sock, 1);
-	// add_epoll_action(incoming_sock, EPOLL_CTL_ADD, EPOLLIN);
 	ev_io_init(&incoming_watcher, incoming_callback, incoming_sock, EV_READ);
 	ev_io_start(loop, &incoming_watcher);
 
-	//----------------------------
-	//add stats sock
-
-	stats_sock = lz_utils::add_listener(config.blz.stats.ip.c_str(), config.blz.stats.port.c_str());
+	stats_sock = coda_listen(config.blz.stats.ip.c_str(), config.blz.stats.port.c_str(), 1024, 0);
 	if (-1 != stats_sock)
 	{
 		log_info("blizzard statistics is bound to %s:%s", config.blz.stats.ip.c_str(), config.blz.stats.port.c_str());
 	}
-
 	lz_utils::set_socket_timeout(stats_sock, 50000);
-
-	//----------------------------
-	//add epoll wakeup fd
 
 	int pipefd[2];
 	if (::pipe(pipefd) == -1)
 	{
 		throw coda_error("server::prepare(): pipe() failed: %s", coda_strerror(errno));
 	}
-
 	wakeup_osock = pipefd[1];
 	wakeup_isock = pipefd[0];
-
 	coda_set_nonblk(wakeup_isock, 1);
-	// add_epoll_action(wakeup_isock, EPOLL_CTL_ADD, EPOLLIN | EPOLLET);
 	ev_io_init(&wakeup_watcher, wakeup_callback, wakeup_isock, EV_READ);
 	ev_io_start(loop, &wakeup_watcher);
 
@@ -542,58 +523,14 @@ void blizzard::server::finalize()
 	factory.stop_module();
 }
 
-#if 0
-int blizzard::server::init_epoll()
-{
-	log_debug("init_epoll");
-
-	int res = epoll_create(HINT_EPOLL_SIZE);
-	if (-1 == res)
-	{
-		throw coda_error("epoll_create: %s", coda_strerror(errno));
-	}
-
-	log_debug("epoll inited: %d", res);
-
-	return res;
-}
-#endif
-
-#if 0
-void blizzard::server::add_epoll_action(int fd, int action, uint32_t mask)
-{
-	log_debug("add_epoll_action %d", fd);
-
-	struct epoll_event evt;
-	memset(&evt, 0, sizeof(evt));
-
-	evt.events = mask;
-	evt.data.fd = fd;
-
-	int r;
-
-	do
-	{
-		r = epoll_ctl(epoll_sock, action, fd, &evt);
-	}
-	while (0 > r && errno == EINTR);
-
-	if (-1 == r)
-	{
-		throw coda_error("add_epoll_action: epoll_ctl(%d, %d): %s",
-			action, evt.events, coda_strerror(errno));
-	}
-}
-#endif
-
 void blizzard::server::event_processing_loop()
 {
 	http * done_task = 0;
-	while(pop_done(&done_task))
+	while (pop_done(&done_task))
 	{
 		done_task->unlock();
 
-		if(-1 != done_task->get_fd())
+ 		if (-1 != done_task->get_fd())
 		{
 			log_debug("%d is still alive", done_task->get_fd());
 			process(done_task);
@@ -607,132 +544,15 @@ void blizzard::server::event_processing_loop()
 
 	ev_run(loop, EVRUN_ONCE);
 
-#if 0
-	int nfds = 0;
-
-	do
-	{
-		nfds = epoll_wait(epoll_sock, events, EPOLL_EVENTS, fds.min_timeout()/*EPOLL_TIMEOUT*/);
-	}
-	while (-1 == nfds && (errno == EINTR || errno == EAGAIN));
-
-	if (-1 == nfds)
-	{
-		throw coda_error("epoll_wait: %s", coda_strerror(errno));
-	}
-
-	if (nfds)
-	{
-		if(nfds > 1)
-		{
-			log_debug("==  epoll_processing %d messages ==", nfds);
-		}
-		else
-		{
-			log_debug("==  epoll_processing 1 message ==");
-		}
-
-		//log_info("==  %d messages ==", nfds);
-	}
-
-	for(int i = 0; i < nfds; i++)
-	{
-		if(events[i].data.fd == epoll_wakeup_isock)
-		{
-			epoll_recv_wakeup();
-		}
-		else if(events[i].data.fd == incoming_sock)
-		{
-			struct in_addr ip;
-
-			int client = lz_utils::accept_new_connection(incoming_sock, ip);
-
-			if(client >= 0)
-			{
-				log_debug("accept_new_connection: %d from %s", client, inet_ntoa(ip));
-
-				lz_utils::set_nonblocking(client);
-
-				if(true == fds.create(client, ip))
-				{
-					add_epoll_action(client, EPOLL_CTL_ADD, EPOLLIN | EPOLLOUT/* | EPOLLRDHUP*/ | EPOLLET);
-				}
-				else
-				{
-					log_error("ERROR: fd[%d] is still in list of fds", client);
-				}
-			}
-		}
-		else
-		{
-			process_event(events[i]);
-		}
-	}
-#endif
-
 	fds.kill_oldest(1000 * config.blz.plugin.connection_timeout);
 
 	stats.process();
-
-#if 0
-	if (0 != coda_rotatelog)
-	{
-		log_rotate(config.blz.log_file_name.c_str());
-		coda_rotatelog = 0;
-	}
-#endif
 }
-
-#if 0
-bool blizzard::server::process_event(const epoll_event& ev)
-{
-	log_debug("query event: %s", events2string(ev).c_str());
-
-	http * con = fds.acquire(ev.data.fd);
-
-	if(con)
-	{
-		if(ev.events & (EPOLLHUP | EPOLLERR))
-		{
-			log_debug("closing connection: got HUP/ERR!");
-			con->set_rdeof();
-			con->set_wreof();
-
-			fds.del(ev.data.fd);
-		}
-		else
-		{
-			if(ev.events & EPOLLIN)
-			{
-				con->allow_read();
-			}
-
-			if(ev.events & EPOLLOUT)
-			{
-				con->allow_write();
-			}
-
-			/*if(ev.events & EPOLLRDHUP)
-			{
-				log_debug("push_event: RDHUP!");
-
-				con->set_rdeof();
-			}*/
-
-			process(con);
-		}
-	}
-	else
-	{
-		log_error("ERROR: process_event: unregistered fd in epoll set: %d", ev.data.fd);
-	}
-
-	return true;
-}
-#endif
 
 bool blizzard::server::process(http * con)
 {
+log_warn("processing fd=%d, state=%d, is_locked=%d", con->get_fd(), con->state(), con->is_locked());
+
 	if (!con->is_locked())
 	{
 		con->process();
@@ -794,10 +614,10 @@ void blizzard::server::easy_processing_loop()
 
 		case BLZ_AGAIN:
 			log_debug("easy thread -> hard thread");
-			if(config.blz.plugin.hard_threads)
+			if (config.blz.plugin.hard_threads)
 			{
 				bool ret = push_hard(task);
-				if(false == ret)
+				if (false == ret)
 				{
 					log_debug("hard queue full: hard_queue_size == %d", config.blz.plugin.hard_queue_limit);
 					task->set_response_status(503);
@@ -965,24 +785,24 @@ void *blizzard::stats_loop_function(void *ptr)
 			if (srv->stats_sock != -1)
 			{
 				struct in_addr ip;
-				int stats_client = lz_utils::accept_new_connection(srv->stats_sock, ip);
+				int stats_client = coda_accept(srv->stats_sock, &ip, 0);
 
 				if (stats_client >= 0)
 				{
 					lz_utils::set_socket_timeout(stats_client, 50000);
 
-					log_debug("stats: accept_new_connection: %d from %s", stats_client, inet_ntoa(ip));
+					log_debug("stats: accept_connection: %d from %s", stats_client, inet_ntoa(ip));
 
 					stats_parser.init(stats_client, ip);
 
-					while(true)
+					while (true)
 					{
 						stats_parser.allow_read();
 						stats_parser.allow_write();
 
 						stats_parser.process();
 
-						if(stats_parser.state() == http::sReadyToHandle)
+						if (stats_parser.state() == http::sReadyToHandle)
 						{
 							stats_parser.set_response_status(200);
 							stats_parser.add_response_header("Content-type", "text/plain");
