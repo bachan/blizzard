@@ -10,7 +10,7 @@ struct statistics
 {
 	enum {TIME_DELTA = 4};
 
-	time_t last_processed_time;
+	double last_processed_time;
 
 	volatile int requests_count;
 	volatile uint64_t resp_time_total;
@@ -37,7 +37,7 @@ public:
 
 	statistics();
 
-	void process();
+	void process(double now);
 	void report_response_time(uint64_t time);
 
 	void report_easy_queue_len(size_t len);

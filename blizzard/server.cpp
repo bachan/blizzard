@@ -448,6 +448,8 @@ static void silent_callback(EV_P_ ev_timer *w, int tev)
 		log_rotate(s->config.blz.log_file_name.c_str());
 		coda_rotatelog = 0;
 	}
+
+	stats.process(ev_now(loop));
 }
 
 void blizzard::server::accept_connection()
@@ -553,11 +555,12 @@ void blizzard::server::event_processing_loop()
 	}
 #endif
 
-	ev_run(loop, EVRUN_ONCE);
+	// ev_run(loop, EVRUN_ONCE);
+	ev_run(loop, 0);
 
 	// fds.kill_oldest(1000 * config.blz.plugin.connection_timeout);
 
-	stats.process();
+	// stats.process();
 }
 
 bool blizzard::server::process(http * con)
@@ -867,7 +870,7 @@ void *blizzard::stats_loop_function(void *ptr)
 					}
 
 					stats_parser.destroy();
-					stats.process();
+					stats.process(time(0));
 				}
 			}
 			else

@@ -47,19 +47,15 @@ double blizzard::statistics::get_rps()const
 	return avg_rps;
 }
 
-void blizzard::statistics::process()
+void blizzard::statistics::process(double now)
 {
-	time_t curr_time = time(0);
-
-	double diff = curr_time - last_processed_time;
-
-	if (diff > TIME_DELTA)
+	if (TIME_DELTA < now - last_processed_time)
 	{
 		resp_time_min = min_t;
 		resp_time_mid = requests_count ? (resp_time_total / (requests_count)) : 0;
 		resp_time_max = max_t;
 
-		avg_rps = (double)requests_count / TIME_DELTA;
+		avg_rps = (double) requests_count / TIME_DELTA;
 
 		easy_queue_max_len = eq_ml;
 		hard_queue_max_len = hq_ml;
@@ -73,7 +69,7 @@ void blizzard::statistics::process()
 		hq_ml = 0;
 		dq_ml = 0;
 
-		last_processed_time = curr_time;
+		last_processed_time = now;
 	}
 }
 
