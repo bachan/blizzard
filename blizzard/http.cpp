@@ -156,7 +156,7 @@ static void timeout_callback(EV_P_ ev_timer *w, int tev)
 
 log_warn("timeout: is_locked=%d, state=%d, fd=%d", con->is_locked(), con->state(), con->get_fd());
 
-	if (!con->is_locked() && (con->state() == blizzard::http::sUndefined || con->state() == blizzard::http::sDone))
+	if (!con->is_locked())
 	{
 		ev_io_stop(loop, &e->watcher_recv);
 		ev_io_stop(loop, &e->watcher_send);
