@@ -6,10 +6,10 @@
 #include <stdexcept>
 #include <deque>
 #include "config.hpp"
-#include "fd_map.hpp"
+#include "http.hpp"
+#include "pool.hpp"
 #include "plugin_factory.hpp"
 #include "statistics.hpp"
-#include "utils.hpp"
 
 namespace blizzard {
 

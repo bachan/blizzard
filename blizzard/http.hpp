@@ -5,7 +5,6 @@
 #include <stdint.h>
 #include "mem_chunk.hpp"
 #include "plugin.hpp"
-#include "utils.hpp"
 
 namespace blizzard {
 

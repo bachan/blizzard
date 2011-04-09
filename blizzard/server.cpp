@@ -485,7 +485,7 @@ void blizzard::server::prepare()
 	{
 		log_info("blizzard statistics is bound to %s:%s", config.blz.stats.ip.c_str(), config.blz.stats.port.c_str());
 	}
-	lz_utils::set_socket_timeout(stats_sock, 50000);
+	coda_set_socket_timeout(stats_sock, 50000);
 
 	int pipefd[2];
 	if (::pipe(pipefd) == -1)
@@ -799,7 +799,7 @@ void *blizzard::stats_loop_function(void *ptr)
 
 				if (stats_client >= 0)
 				{
-					lz_utils::set_socket_timeout(stats_client, 50000);
+					coda_set_socket_timeout(stats_client, 50000);
 
 					log_debug("stats: accept_connection: %d from %s", stats_client, inet_ntoa(ip));
 
