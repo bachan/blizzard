@@ -154,6 +154,8 @@ static void timeout_callback(EV_P_ ev_timer *w, int tev)
 	blizzard::events *e = memberof(blizzard::events, watcher_timeout, w);
 	blizzard::http *con = e->con;
 
+log_warn("timeout: is_locked=%d, state=%d, fd=%d", con->is_locked(), con->state(), con->get_fd());
+
 	if (!con->is_locked() && (con->state() == blizzard::http::sUndefined || con->state() == blizzard::http::sDone))
 	{
 		ev_io_stop(loop, &e->watcher_recv);
@@ -220,14 +222,10 @@ void blizzard::http::init(int new_fd, const struct in_addr& ip)
 	out_post.set_expand(true);
 
 	state_ = sUndefined;
-
-	/* log_debug("blizzard::http::init(%d, %s)", new_fd, inet_ntoa(in_ip)); */
 }
 
 void blizzard::http::destroy()
 {
-	/* log_debug("blizzard::http::destroy(%d)", fd); */
-
 	if (-1 != fd)
 	{
 		close(fd);
@@ -253,8 +251,6 @@ bool blizzard::http::ready_write()const
 {
 	return can_write && want_write;// && !stop_writing;
 }
-
-//-------------------------------------------------------------------------------------------------------------------
 
 void blizzard::http::allow_read()
 {
