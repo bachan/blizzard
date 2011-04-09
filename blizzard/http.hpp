@@ -9,12 +9,22 @@
 
 namespace blizzard {
 
+struct http;
+
+struct events
+{
+	http *con;
+	ev_io watcher_recv;
+	ev_io watcher_send;
+	ev_timer watcher_timeout;
+};
+
 struct http : public blz_task
 {
 public:
 	enum http_state {sUndefined, sReadingHead, sReadingHeaders, sReadingPost, sReadyToHandle, sWriting, sDone};
 
-	ev_io watcher;
+	events e;
 
 protected:
 	static int http_codes_num;

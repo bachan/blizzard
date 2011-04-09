@@ -126,41 +126,56 @@ blizzard::http::~http()
 	state_ = sUndefined;
 }
 
-static void watcher_callback(EV_P_ ev_io *w, int tev)
+#define memberof(t,n,p) (((t*)(((unsigned char *)(p))-offsetof(t,n))))
+
+static void recv_callback(EV_P_ ev_io *w, int tev)
 {
 	blizzard::server *s = (blizzard::server *) ev_userdata(loop);
-	blizzard::http *con = s->fds.acquire(w->fd);
+	blizzard::events *e = memberof(blizzard::events, watcher_recv, w);
+	blizzard::http *con = e->con;
 
-	if (!con)
+	con->allow_read();
+	s->process(con);
+}
+
+static void send_callback(EV_P_ ev_io *w, int tev)
+{
+	blizzard::server *s = (blizzard::server *) ev_userdata(loop);
+	blizzard::events *e = memberof(blizzard::events, watcher_send, w);
+	blizzard::http *con = e->con;
+
+	con->allow_write();
+	s->process(con);
+}
+
+static void timeout_callback(EV_P_ ev_timer *w, int tev)
+{
+	blizzard::server *s = (blizzard::server *) ev_userdata(loop);
+	blizzard::events *e = memberof(blizzard::events, watcher_timeout, w);
+	blizzard::http *con = e->con;
+
+	if (!con->is_locked() && (con->state() == blizzard::http::sUndefined || con->state() == blizzard::http::sDone))
 	{
-		log_error("ERROR: process_event: unregistered fd in epoll set: %d", w->fd);
-		return;
+		ev_io_stop(loop, &e->watcher_recv);
+		ev_io_stop(loop, &e->watcher_send);
+		ev_timer_stop(loop, &e->watcher_timeout);
+
+		con->destroy();
+		s->http_pool.free(con);
 	}
+}
 
-	if (tev & EV_ERROR)
-	{
-		ev_io_stop(loop, w);
+void blizzard::http::add_watcher(struct ev_loop *loop)
+{
+	e.con = this;
 
-		log_debug("closing connection: got HUP/ERR!");
-		con->set_rdeof();
-		con->set_wreof();
+	ev_io_init(&e.watcher_recv, recv_callback, fd, EV_READ);
+	ev_io_start(loop, &e.watcher_recv);
 
-		s->fds.del(w->fd); /* XXX blizzard::server */
-	}
-	else
-	{
-		if (tev & EV_READ)
-		{
-			con->allow_read();
-		}
+	ev_io_init(&e.watcher_send, send_callback, fd, EV_WRITE);
 
-		if (tev & EV_WRITE)
-		{
-			con->allow_write();
-		}
-
-		s->process(con); /* XXX blizzard::server */
-	}
+	ev_timer_init(&e.watcher_timeout, timeout_callback, 0, 1);
+	ev_timer_again(loop, &e.watcher_timeout);
 }
 
 void blizzard::http::init(int new_fd, const struct in_addr& ip)
@@ -207,12 +222,6 @@ void blizzard::http::init(int new_fd, const struct in_addr& ip)
 	state_ = sUndefined;
 
 	/* log_debug("blizzard::http::init(%d, %s)", new_fd, inet_ntoa(in_ip)); */
-}
-
-void blizzard::http::add_watcher(struct ev_loop *loop)
-{
-	ev_io_init(&watcher, watcher_callback, fd, EV_READ | EV_WRITE);
-	ev_io_start(loop, &watcher);
 }
 
 void blizzard::http::destroy()
@@ -528,14 +537,14 @@ void blizzard::http::process()
 
 bool blizzard::http::network_tryread()
 {
-	if(-1 != fd)
+	if (-1 != fd)
 	{
 		/* log_debug("blizzard::http::process::ready_read(%d)", fd); */
 		/* log_debug("read{c:%d w:%d st:%d}, write{c:%d w:%d st:%d}", can_read, want_read, stop_reading, can_write, want_write, stop_writing); */
 
-		while(can_read && !stop_reading/* && want_read*/)
+		while (can_read && !stop_reading/* && want_read*/)
 		{
-			if(!in_headers.read_from_fd(fd, can_read, want_read, stop_reading))
+			if (!in_headers.read_from_fd(fd, can_read, want_read, stop_reading))
 			{
 				state_ = sDone;
 				response_status = 400;

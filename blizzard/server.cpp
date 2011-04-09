@@ -413,6 +413,24 @@ static void wakeup_callback(EV_P_ ev_io *w, int tev)
 {
 	blizzard::server *s = (blizzard::server *) ev_userdata(loop);
 	s->recv_wakeup();
+
+	blizzard::http *con = 0;
+	while (s->pop_done(&con))
+	{
+		ev_io_start(loop, &con->e.watcher_send);
+
+		con->unlock();
+
+ 		if (-1 != con->get_fd())
+		{
+			s->process(con);
+		}
+		else
+		{
+			con->destroy();
+			s->http_pool.free(con);
+		}
+	}
 }
 
 static void silent_callback(EV_P_ ev_timer *w, int tev)
@@ -434,25 +452,15 @@ static void silent_callback(EV_P_ ev_timer *w, int tev)
 
 void blizzard::server::accept_connection()
 {
+	int sd;
 	struct in_addr ip;
 
-	int client = coda_accept(incoming_sock, &ip, 1);
+	sd = coda_accept(incoming_sock, &ip, 1);
+	if (0 > sd) return;
 
-	if (client >= 0)
-	{
-		log_debug("accept_connection: %d from %s", client, inet_ntoa(ip));
-
-		http *con = fds.create(client, ip);
-
-		if (NULL != con)
-		{
-			con->add_watcher(loop); /* epoll used EPOLLET here */
-		}
-		else
-		{
-			log_error("ERROR: fd[%d] is still in list of fds", client);
-		}
-	}
+	http *con = http_pool.allocate();
+	con->init(sd, ip);
+	con->add_watcher(loop); /* epoll used EPOLLET here */
 }
 
 void blizzard::server::prepare()
@@ -461,7 +469,7 @@ void blizzard::server::prepare()
 
 	loop = ev_default_loop(0);
 	ev_set_userdata(loop, this); /* hack to simplify things in http.cpp, couldn't be REALLY needed, if blizzard were written more libev friendly */
-	ev_set_io_collect_interval(loop, 0.01); /* hack to emulate old blizzard behaviour (epolling with timeout 100ms (we set it to 50ms here)) */
+	// ev_set_io_collect_interval(loop, 0.01); [> hack to emulate old blizzard behaviour (epolling with timeout 100ms (we set it to 50ms here)) <]
 	// ev_set_timeout_collect_interval(loop, 0.01);
 
 	incoming_sock = coda_listen(config.blz.plugin.ip.c_str(), config.blz.plugin.port.c_str(), LISTEN_QUEUE_SZ, 1);
@@ -525,34 +533,35 @@ void blizzard::server::finalize()
 
 void blizzard::server::event_processing_loop()
 {
-	http * done_task = 0;
-	while (pop_done(&done_task))
+#if 0
+	http *con = 0;
+	while (pop_done(&con))
 	{
-		done_task->unlock();
+		ev_io_start(loop, &con->e.watcher_send);
 
- 		if (-1 != done_task->get_fd())
+		con->unlock();
+
+ 		if (-1 != con->get_fd())
 		{
-			log_debug("%d is still alive", done_task->get_fd());
-			process(done_task);
+			process(con);
 		}
 		else
 		{
-			log_debug("%d is already dead while travelling through queues", done_task->get_fd());
-			fds.release(done_task);
+			con->destroy();
+			http_pool.free(con);
 		}
 	}
+#endif
 
 	ev_run(loop, EVRUN_ONCE);
 
-	fds.kill_oldest(1000 * config.blz.plugin.connection_timeout);
+	// fds.kill_oldest(1000 * config.blz.plugin.connection_timeout);
 
 	stats.process();
 }
 
 bool blizzard::server::process(http * con)
 {
-log_warn("processing fd=%d, state=%d, is_locked=%d", con->get_fd(), con->state(), con->is_locked());
-
 	if (!con->is_locked())
 	{
 		con->process();
@@ -576,11 +585,12 @@ log_warn("processing fd=%d, state=%d, is_locked=%d", con->get_fd(), con->state()
 		}
 		else if (con->state() == http::sDone || con->state() == http::sUndefined)
 		{
-			log_debug("%d is done, closing write side of connection", con->get_fd());
+			ev_io_stop(loop, &con->e.watcher_recv);
+			ev_io_stop(loop, &con->e.watcher_send);
+			ev_timer_stop(loop, &con->e.watcher_timeout);
 
-			ev_io_stop(loop, &con->watcher);
-
-			fds.del(con->get_fd());
+			con->destroy();
+			http_pool.free(con);
 		}
 	}
 
@@ -818,9 +828,6 @@ void *blizzard::stats_loop_function(void *ptr)
 
 							snprintf(buff, 1024, "\t<rps>%.4f</rps>\n", stats.get_rps());
 							resp += buff;
-
-							snprintf(buff, 1024, "\t<fd_count>%d</fd_count>\n", (int)srv->fds.fd_count());
-							resp += buff; 
 
 							snprintf(buff, 1024, "\t<queues>\n\t\t<easy>%d</easy>\n\t\t<max_easy>%d</max_easy>\n"
 								"\t\t<hard>%d</hard>\n\t\t<max_hard>%d</max_hard>\n\t\t<done>%d</done>\n"

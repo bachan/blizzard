@@ -37,7 +37,8 @@ struct server
 	std::deque<http*> hard_queue;
 	std::deque<http*> done_queue;
 
-	fd_map fds;
+	pool_ns::pool<http, 500> http_pool;
+
 	plugin_factory factory;
 	blz_config config;
 
