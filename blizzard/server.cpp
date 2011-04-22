@@ -151,19 +151,19 @@ void blizzard::server::join_threads()
 		return;
 	}
 
-	pthread_join(event_th,  0);
+	pthread_join(event_th, NULL);
 	log_info("event_th joined");
 	threads_num--;
 
-	pthread_join(idle_th,  0);
+	pthread_join(idle_th, NULL);
 	log_info("idle_th joined");
 	threads_num--;
 
-	pthread_join(stats_th,  0);
+	pthread_join(stats_th, NULL);
 	log_info("stats_th joined");
 	threads_num--;
 
-	for(size_t i = 0; i < easy_th.size(); i++)
+	for (size_t i = 0; i < easy_th.size(); i++)
 	{
 		log_info("pthread_join(easy_th[%d], 0)", (int)i);
 		pthread_join(easy_th[i], 0);
@@ -172,7 +172,7 @@ void blizzard::server::join_threads()
 
 	easy_th.clear();
 
-	for(size_t i = 0; i < hard_th.size(); i++)
+	for (size_t i = 0; i < hard_th.size(); i++)
 	{
 		log_info("pthread_join(hard_th[%d], 0)", (int)i);
 		pthread_join(hard_th[i], 0);
@@ -200,7 +200,7 @@ void blizzard::server::fire_all_threads()
 void blizzard::server::send_wakeup()
 {
 	log_debug("send_wakeup()");
-	char b[1] = {'w'};
+	char b [1] = {'w'};
 
 	int ret;
 	do
@@ -211,13 +211,13 @@ void blizzard::server::send_wakeup()
 			log_error("send_wakeup(): write failure: %s", coda_strerror(errno));
 		}
 	}
-	while(ret < 0);
+	while (ret < 0);
 }
 
 void blizzard::server::recv_wakeup()
 {
 	log_debug("recv_wakeup()");
-	char b[1024];
+	char b [1024];
 
 	int ret;
 	do
@@ -228,7 +228,7 @@ void blizzard::server::recv_wakeup()
 			log_error("recv_wakeup(): read failure: %s", coda_strerror(errno));
 		}
 	}
-	while(ret == 1024 || errno == EINTR);
+	while (ret == 1024 || errno == EINTR);
 }
 
 bool blizzard::server::push_easy(http * el)
@@ -713,6 +713,7 @@ void blizzard::server::idle_processing_loop()
 
 void *blizzard::event_loop_function(void *ptr)
 {
+	log_thread_name_set("BLZ_EVENT");
 	blizzard::server *srv = (blizzard::server *) ptr;
 
 	try
@@ -797,6 +798,7 @@ void *blizzard::idle_loop_function(void *ptr)
 
 void *blizzard::stats_loop_function(void *ptr)
 {
+	log_thread_name_set("BLZ_STATS");
 	blizzard::server *srv = (blizzard::server *) ptr;
 	blizzard::http stats_parser;
 
