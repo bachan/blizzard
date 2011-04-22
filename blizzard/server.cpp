@@ -66,6 +66,9 @@ blizzard::server::~server()
 
 	pthread_mutex_destroy(&done_mutex);
 
+	/* remove pid-file (if it was set from blizzard's config) */
+	unlink(config.blz.pid_file_name.c_str());
+
 	log_debug("/~server()");
 }
 
@@ -384,11 +387,17 @@ bool blizzard::server::pop_done(http** el)
 	return ret;
 }
 
-void blizzard::server::load_config(const char* xml_in, bool is_daemon)
+/* xml_in, pid_fn, is_daemon are command line arguments */
+void blizzard::server::load_config(const char* xml_in, const char *pid_fn, bool is_daemon)
 {
 	config.clear();
 	config.load_from_file(xml_in);
 	config.check();
+
+	if (!pid_fn)
+	{
+		coda_mkpidf(config.blz.pid_file_name.c_str());
+	}
 
 	if (!is_daemon) return;
 

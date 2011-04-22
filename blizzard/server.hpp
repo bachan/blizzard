@@ -93,7 +93,7 @@ public:
 	server();
 	~server();
 
-	void load_config(const char* xml_in, bool is_daemon);
+	void load_config(const char* xml_in, const char *pid_fn, bool is_daemon);
 	void prepare();
 	void finalize();
 

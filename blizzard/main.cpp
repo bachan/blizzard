@@ -29,7 +29,7 @@ int main(int argc, char** argv)
 
 		while (0 == coda_terminate)
 		{
-			server.load_config(opt.config, opt.daemon);
+			server.load_config(opt.config, opt.pid, opt.daemon);
 			server.prepare();
 			server.init_threads();
 			server.join_threads();
