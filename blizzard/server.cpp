@@ -159,6 +159,7 @@ void blizzard::server::join_threads()
 	log_info("idle_th joined");
 	threads_num--;
 
+	pthread_cancel(stats_th); /* XXX hack for FreeBSD blocking accept (why on Earth doesn't it needed under Linux?) */
 	pthread_join(stats_th, NULL);
 	log_info("stats_th joined");
 	threads_num--;
