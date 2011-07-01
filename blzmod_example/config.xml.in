@@ -1,0 +1,21 @@
+<blizzard>
+	<pid_file_name>@CMAKE_INSTALL_PREFIX@/var/run/blizzard_example.pid</pid_file_name>
+	<log_file_name>@CMAKE_INSTALL_PREFIX@/var/log/blizzard_example.log</log_file_name>
+	<log_level>info</log_level>
+
+	<stats ip="0.0.0.0" port="11119" />
+
+	<plugin ip="0.0.0.0" port="19999" >
+		<connection_timeout>100000</connection_timeout>
+		<idle_timeout>1000</idle_timeout>
+
+		<library>@CMAKE_INSTALL_PREFIX@/@LIBDIR@/libblzmod_example.so</library>
+		<params>@CMAKE_INSTALL_PREFIX@/etc/blzmod_example/config_module.xml</params>
+
+		<easy_threads>4</easy_threads>
+		<hard_threads>2</hard_threads>
+
+		<easy_queue_limit>200</easy_queue_limit>
+		<hard_queue_limit>300</hard_queue_limit>
+	</plugin>
+</blizzard>

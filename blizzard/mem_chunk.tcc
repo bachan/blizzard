@@ -1,11 +1,12 @@
 namespace blizzard
 {
-//-------------------------------------------------------------------------------------------------------------------
+
 template <typename T>
 inline static const T& min(const T& a, const T& b)
 {
 	return a < b ? a : b;
 }
+
 //-------------------------------------------------------------------------------------------------------------------
 
 template<int data_size>
@@ -31,10 +32,9 @@ inline void mem_chunk<data_size>::insert_page()
 template<int data_size>
 inline void mem_chunk<data_size>::reset()
 {
-	if(next)
+	if (next)
 	{
 		delete next;
-
 		next = 0;
 	}
 
@@ -60,7 +60,6 @@ inline void * mem_chunk<data_size>::get_data()
 {
 	return page;
 }
-
 
 template<int data_size>
 inline size_t mem_chunk<data_size>::get_data_size()const
@@ -170,22 +169,23 @@ inline bool mem_chunk<data_size>::write_to_fd(int fd, bool& can_write, bool& wan
 
 	mem_chunk<data_size> * cur_page = this;
 
-	while(cur_page->next && (cur_page->current == cur_page->get_data_size()))
+	while (cur_page->next && (cur_page->current == cur_page->get_data_size()))
 	{
 		cur_page = cur_page->next;
 	}
 
-	while(true)
+	while (true)
 	{
 		ssize_t to_write = cur_page->get_data_size() - cur_page->current;
-		if(to_write)
+		if (to_write)
 		{
-			ssize_t    wr = write(fd, cur_page->page + cur_page->current, to_write);
-			if(-1 == wr)
+			ssize_t wr = write(fd, cur_page->page + cur_page->current, to_write);
+			// log_info("wr = %d, to_write = %d, cur_page->get_data_size() = %d, errno = %d (%s)", wr, to_write, cur_page->get_data_size(), errno, coda_strerror(errno));
+			if (-1 == wr)
 			{
 				/* log_debug("process/read error: '%s'", coda_strerror(errno)); */
 
-				switch(errno)
+				switch (errno)
 				{
 				case EPIPE:
 					wreof = true;
@@ -201,11 +201,11 @@ inline bool mem_chunk<data_size>::write_to_fd(int fd, bool& can_write, bool& wan
 					break;
 				}
 			}
-			else if(wr)
+			else if (wr)
 			{
 				iswr = true;
 				cur_page->current += wr;
-				if(wr < to_write)
+				if (wr < to_write)
 				{
 					can_write = false;
 					return iswr;
@@ -225,12 +225,13 @@ inline bool mem_chunk<data_size>::write_to_fd(int fd, bool& can_write, bool& wan
 			return iswr;
 		}
 
-		if(cur_page->next)
+		if (cur_page->next)
 		{
 			cur_page = cur_page->next;
 		}
 		else
 		{
+			want_write = false;
 			return iswr;
 		}
 	}
@@ -411,10 +412,10 @@ inline bool mem_block::write_to_fd(int fd, bool& can_write, bool& want_write, bo
 	while(true)
 	{
 		ssize_t to_write = size() - marker();
-		if(to_write)
+		if (to_write)
 		{
-			ssize_t    wr = write(fd, page + current, to_write);
-			if(-1 == wr)
+			ssize_t wr = write(fd, page + current, to_write);
+			if (-1 == wr)
 			{
 				/* log_debug("process/read error: '%s'", coda_strerror(errno)); */
 
@@ -438,7 +439,7 @@ inline bool mem_block::write_to_fd(int fd, bool& can_write, bool& want_write, bo
 			{
 				current += wr;
 
-				if(wr < to_write)
+				if (wr < to_write)
 				{
 					can_write = false;
 				}

@@ -18,3 +18,11 @@ INSTALL (FILES blizzard/plugin.hpp DESTINATION include/blizzard)
 INSTALL (TARGETS blizzard DESTINATION bin)
 INSTALL_TEMPLATE (blizzard/config.xml.in DESTINATION etc/blizzard)
 
+# Example Module
+
+AUX_SOURCE_DIRECTORY (blzmod_example SRC_BLZMOD_EXAMPLE)
+ADD_LIBRARY (blzmod_example SHARED ${SRC_BLZMOD_EXAMPLE})
+INSTALL (TARGETS blzmod_example DESTINATION ${LIBDIR})
+INSTALL_TEMPLATE (blzmod_example/config.xml.in DESTINATION etc/blzmod_example)
+INSTALL_TEMPLATE (blzmod_example/config_module.xml.in DESTINATION etc/blzmod_example)
+

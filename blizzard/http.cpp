@@ -558,38 +558,31 @@ bool blizzard::http::network_trywrite()
 	if(-1 != fd)
 	{
 		/* log_debug("blizzard::http::process::ready_write(%d)", fd); */
-		/* log_debug("read{c:%d w:%d st:%d}, write{c:%d w:%d st:%d}", */
-		 //                   can_read,  want_read, stop_reading,
-		  //                  can_write, want_write, stop_writing);
+		/* log_debug("read{c:%d w:%d st:%d}, write{c:%d w:%d st:%d}", can_read,  want_read, stop_reading, can_write, want_write, stop_writing); */
 
 		bool want_write = true;
 
-		if(can_write && !stop_writing)
+		if (can_write && !stop_writing)
 		{
 			/* log_debug("out_title.write_to_fd"); */
 			out_title.write_to_fd(fd, can_write, want_write, stop_writing);
 		}
 
-#if 0
 		want_write = true;
 
-		if (can_write && !stop_writing)
-		{
-			/* log_debug("out_headers.write_to_fd"); */
-			out_headers.write_to_fd(fd, can_write, want_write, stop_writing);
-		}
-#endif
-
-		want_write = true;
-
-		if(out_post.get_data_size() && can_write && !stop_writing)
+		/* XXX remove explicit check for 0 != out_post.get_data_size() */
+		if (out_post.get_data_size() && can_write && !stop_writing)
 		{
 			/* log_debug("out_post.write_to_fd"); */
 			out_post.write_to_fd(fd, can_write, want_write, stop_writing);
 		}
 
-		/* log_debug("all writings done"); */
-		set_wreof();
+		/* XXX remove explicit check for 0 == out_post.get_data_size() */
+		if (0 == out_post.get_data_size() || !want_write || stop_writing)
+		{
+			/* log_debug("all writings done"); */
+			set_wreof();
+		}
 	}
 
 	return 0;
@@ -597,32 +590,30 @@ bool blizzard::http::network_trywrite()
 
 int blizzard::http::write_data()
 {
-	while(can_write)
+	while (can_write)
 	{
 		network_trywrite();
 	}
 
-	if(false == get_wreof())
+	if (false == get_wreof())
 	{
 		state_ = sWriting;
-
 		return -1;
 	}
 	else
 	{
 		state_ = sDone;
-
 		return 0;
 	}
 }
 
 char * blizzard::http::read_header_line()
 {
-	while(true)
+	while (true)
 	{
 		want_read = true;
 
-		if(!network_tryread())
+		if (!network_tryread())
 		{
 			break;
 		}
