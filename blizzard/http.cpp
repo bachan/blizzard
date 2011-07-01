@@ -169,6 +169,8 @@ log_warn("timeout: is_locked=%d, state=%d, fd=%d", con->is_locked(), con->state(
 
 void blizzard::http::add_watcher(struct ev_loop *loop)
 {
+	blizzard::server *s = (blizzard::server *) ev_userdata(loop);
+
 	e.con = this;
 
 	ev_io_init(&e.watcher_recv, recv_callback, fd, EV_READ);
@@ -176,7 +178,7 @@ void blizzard::http::add_watcher(struct ev_loop *loop)
 
 	ev_io_init(&e.watcher_send, send_callback, fd, EV_WRITE);
 
-	ev_timer_init(&e.watcher_timeout, timeout_callback, 0, 1);
+	ev_timer_init(&e.watcher_timeout, timeout_callback, 0, s->config.blz.plugin.connection_timeout / (double) 1000);
 	ev_timer_again(loop, &e.watcher_timeout);
 }
 
