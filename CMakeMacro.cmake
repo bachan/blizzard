@@ -3,7 +3,11 @@ SET (FLAGS_DEFAULT  "-fPIC -pipe")
 SET (FLAGS_WARNING  "-Wall -Werror -Wno-long-long -Wno-variadic-macros -Wno-strict-aliasing")# -Wextra -pedantic")
 SET (FLAGS_CXX_LANG "-Wno-deprecated")
 SET (FLAGS_RELEASE  "-O3 -fomit-frame-pointer -funroll-loops -DNDEBUG")
-SET (FLAGS_DEBUG    "-ggdb -pg")
+SET (FLAGS_DEBUG    "-ggdb")
+
+IF (CMAKE_SYSTEM_NAME STREQUAL Linux)
+  SET (FLAGS_DEBUG "${FLAGS_DEBUG} -pg")
+ENDIF ()
 
 # TODO
 # -pedantic: stupid gcc-4.4 warning about empty macro arguments
