@@ -3,6 +3,7 @@
 
 #include <ev.h>
 #include <stdint.h>
+#include <stddef.h>
 #include "mem_chunk.hpp"
 #include "plugin.hpp"
 
