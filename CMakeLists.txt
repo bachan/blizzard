@@ -3,7 +3,7 @@ CMAKE_MINIMUM_REQUIRED (VERSION 2.6)
 INCLUDE (CMakeMacro.cmake)
 
 USE_PACKAGE (expat expat.h)
-USE_PACKAGE (ev ev.h)
+USE_PACKAGE (ev ev.h PATH_SUFFIXES libev .) # PATH_SUFFIXES is for stupid CentOS RPM package
 USE_PACKAGE (coda coda/coda.h)
 
 AUX_SOURCE_DIRECTORY (blizzard SRC_BLIZZARD)
