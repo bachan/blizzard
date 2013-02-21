@@ -484,19 +484,19 @@ void blizzard::server::prepare()
 	// ev_set_io_collect_interval(loop, 0.01); [> hack to emulate old blizzard behaviour (epolling with timeout 100ms (we set it to 50ms here)) <]
 	// ev_set_timeout_collect_interval(loop, 0.01);
 
-	incoming_sock = coda_listen(config.blz.plugin.ip.c_str(), config.blz.plugin.port.c_str(), LISTEN_QUEUE_SZ, 1);
-	if (-1 != incoming_sock)
+	if (0 > (incoming_sock = coda_listen(config.blz.plugin.ip.c_str(), config.blz.plugin.port.c_str(), LISTEN_QUEUE_SZ, 1)))
 	{
-		log_info("blizzard is bound to %s:%s", config.blz.plugin.ip.c_str(), config.blz.plugin.port.c_str());
+		throw coda_error("can't bound plugin to %s:%s (%d: %s)", config.blz.plugin.ip.c_str(), config.blz.plugin.port.c_str(), errno, coda_strerror(errno));
 	}
+
 	ev_io_init(&incoming_watcher, incoming_callback, incoming_sock, EV_READ);
 	ev_io_start(loop, &incoming_watcher);
 
-	stats_sock = coda_listen(config.blz.stats.ip.c_str(), config.blz.stats.port.c_str(), 1024, 0);
-	if (-1 != stats_sock)
+	if (0 > (stats_sock = coda_listen(config.blz.stats.ip.c_str(), config.blz.stats.port.c_str(), 1024, 0)))
 	{
-		log_info("blizzard statistics is bound to %s:%s", config.blz.stats.ip.c_str(), config.blz.stats.port.c_str());
+		throw coda_error("can't bound stats to %s:%s (%d: %s)", config.blz.stats.ip.c_str(), config.blz.stats.port.c_str(), errno, coda_strerror(errno));
 	}
+
 	coda_set_socket_timeout(stats_sock, 50000);
 
 	int pipefd[2];
