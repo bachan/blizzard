@@ -16,7 +16,6 @@ struct blz_config : public coda::txml_determination_object
 		std::string pid_file_name;
 		std::string log_file_name;
 		std::string log_level;
-		std::string access_log_file_name;
 
 		struct STATS : public coda::txml_determination_object
 		{
@@ -125,7 +124,6 @@ struct blz_config : public coda::txml_determination_object
 			txml_member(p, pid_file_name);
 			txml_member(p, log_file_name);
 			txml_member(p, log_level);
-			txml_member(p, access_log_file_name);
 			txml_member(p, stats);
 			txml_member(p, plugin);
 		}
@@ -135,7 +133,6 @@ struct blz_config : public coda::txml_determination_object
 			pid_file_name.clear();
 			log_file_name.clear();
 			log_level.clear();
-			access_log_file_name.clear();
 			stats.clear();
 			plugin.clear();
 		}
