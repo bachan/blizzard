@@ -54,6 +54,7 @@ struct blz_plugin
 	virtual int easy(blz_task* tsk) = 0;
 	virtual int hard(blz_task* tsk) = 0;
 	virtual int idle() { return BLZ_OK; }
+	virtual int rotate_custom_logs() { return BLZ_OK; }
 };
 
 extern "C" blz_plugin* get_plugin_instance();

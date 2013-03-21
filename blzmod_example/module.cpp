@@ -1,5 +1,6 @@
 #include <stdlib.h>
 #include <string>
+#include <coda/logger.h>
 #include <blizzard/plugin.hpp>
 
 class blzmod_example : public blz_plugin
@@ -13,10 +14,13 @@ public:
 	int load(const char* fname);
 	int easy(blz_task* task);
 	int hard(blz_task* task);
+	int rotate_custom_logs();
 };
 
 int blzmod_example::load(const char* fname)
 {
+	log_info("blzmod_example plugin loaded");
+
 	return 0;
 }
 
@@ -40,6 +44,13 @@ int blzmod_example::easy(blz_task* task)
 
 int blzmod_example::hard(blz_task* task)
 {
+	return BLZ_OK;
+}
+
+int blzmod_example::rotate_custom_logs()
+{
+	log_info("if you have some custom logs, you can rotate them here");
+
 	return BLZ_OK;
 }
 

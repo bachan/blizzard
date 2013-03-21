@@ -31,6 +31,7 @@ blizzard::server::server()
 	, wakeup_osock(-1)
 	, threads_num(0)
 	, start_time(0)
+	, was_daemonized(false)
 {
 	pthread_mutex_init(&done_mutex, 0);
 
@@ -400,6 +401,8 @@ void blizzard::server::load_config(const char* xml_in, const char *pid_fn, bool 
 		coda_mkpidf(config.blz.pid_file_name.c_str());
 	}
 
+	was_daemonized = is_daemon;
+
 	if (!is_daemon) return;
 
 	int res;
@@ -455,7 +458,15 @@ static void silent_callback(EV_P_ ev_timer *w, int tev)
 	if (0 != coda_rotatelog)
 	{
 		blizzard::server *s = (blizzard::server *) ev_userdata(loop);
-		log_rotate(s->config.blz.log_file_name.c_str());
+
+		if (s->was_daemonized)
+		{
+			log_rotate(s->config.blz.log_file_name.c_str());
+		}
+
+		blz_plugin* plugin = s->factory.open_plugin();
+		plugin->rotate_custom_logs();
+
 		coda_rotatelog = 0;
 	}
 

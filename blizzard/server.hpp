@@ -49,6 +49,8 @@ struct server
 	int threads_num;
 	time_t start_time;
 
+	bool was_daemonized;
+
 	struct ev_loop *loop;
 	ev_io incoming_watcher;
 	ev_io wakeup_watcher;
