@@ -1,0 +1,21 @@
+Source: blizzard
+Section: unknown
+Priority: extra
+Maintainer: bachan <ba4an@yandex.ru>
+Build-Depends: debhelper (>= 7.0.50~), cmake
+Standards-Version: 3.8.4
+Homepage: https://github.com/bachan/blizzard
+#Vcs-Git: git://git.debian.org/collab-maint/blizzard.git
+#Vcs-Browser: http://git.debian.org/?p=collab-maint/blizzard.git;a=summary
+
+Package: blizzard
+Architecture: any
+Depends: ${shlibs:Depends}, ${misc:Depends}
+Description: blizzard http server
+ blizzard http server (two thread pools for different kind of queries)
+
+Package: blizzard-dev
+Architecture: any
+Depends: blizzard ${shlibs:Depends}, ${misc:Depends}
+Description: blizzard http server dev headers
+ blizzard http server headers for plugin development
