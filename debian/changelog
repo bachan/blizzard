@@ -1,3 +1,10 @@
+blizzard (0.0.1-5) unstable; urgency=high
+
+  * fixed inifinite loop in statistics
+  * now statistics is handled in easy loop
+
+ -- unknown <bachan@sample-sandbox1g.dev.itim.vn>  Tue, 06 Aug 2013 17:14:58 +0700
+
 blizzard (0.0.1-4) unstable; urgency=low
 
   * don't strip binary when building
