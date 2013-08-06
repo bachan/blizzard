@@ -419,7 +419,7 @@ inline bool mem_block::write_to_fd(int fd, bool& can_write, bool& want_write, bo
 			{
 				/* log_debug("process/read error: '%s'", coda_strerror(errno)); */
 
-				switch(errno)
+				switch (errno)
 				{
 				case EPIPE:
 					wreof = true;

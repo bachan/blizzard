@@ -427,7 +427,7 @@ void blizzard::http::process()
 
 	while(!quit)
 	{
-		switch(state_)
+		switch (state_)
 		{
 		case sUndefined:
 			want_read = true;
@@ -668,28 +668,26 @@ int blizzard::http::parse_title()
 		*delim++ = 0;
 	}
 
-	switch(mthd[0])
+	switch (mthd[0])
 	{
-		case 'g':
-		case 'G':
-			method = BLZ_METHOD_GET;
-			break;
-
-		case 'h':
-		case 'H':
-			method = BLZ_METHOD_HEAD;
-			break;
-
-		case 'p':
-		case 'P':
-			if (mthd[1] == 'o' || mthd[1] == 'O')
-			{
-				method = BLZ_METHOD_POST;
-			}
-			break;
-		default:
-			method = BLZ_METHOD_UNDEF;
-			return 501;
+	case 'g':
+	case 'G':
+		method = BLZ_METHOD_GET;
+		break;
+	case 'h':
+	case 'H':
+		method = BLZ_METHOD_HEAD;
+		break;
+	case 'p':
+	case 'P':
+		if (mthd[1] == 'o' || mthd[1] == 'O')
+		{
+			method = BLZ_METHOD_POST;
+		}
+		break;
+	default:
+		method = BLZ_METHOD_UNDEF;
+		return 501;
 	}
 
 	protocol_major = atoi(version);
