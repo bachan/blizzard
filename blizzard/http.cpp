@@ -257,20 +257,15 @@ bool blizzard::http::ready_write()const
 void blizzard::http::allow_read()
 {
 	can_read = true;
-	/* log_debug("blizzard::http::process::allow_read(%d)", fd); */
 }
 
 void blizzard::http::allow_write()
 {
 	can_write = true;
-	/* log_debug("blizzard::http::process::allow_write(%d)", fd); */
 }
 
 bool blizzard::http::ready()const
 {
-	/* log_debug("blizzard::http::ready() : read{c:%d w:%d st:%d}, write{c:%d w:%d st:%d}", */
-		/* can_read, want_read, stop_reading, can_write, want_write, stop_writing); */
-
 	return ready_read() || ready_write();
 }
 
@@ -282,8 +277,6 @@ bool blizzard::http::get_rdeof()
 void blizzard::http::set_rdeof()
 {
 	stop_reading = true;
-	//can_read = false;
-	/* log_debug("set_rdeof()"); */
 }
 
 bool blizzard::http::get_wreof()
@@ -295,7 +288,6 @@ void blizzard::http::set_wreof()
 {
 	stop_writing = true;
 	can_write = false;
-	/* log_debug("set_wreof()"); */
 }
 
 int blizzard::http::get_fd()const
@@ -305,13 +297,11 @@ int blizzard::http::get_fd()const
 
 void blizzard::http::lock()
 {
-// log_debug("http(%d)::lock()", fd); 
 	locked = true;
 }
 
 void blizzard::http::unlock()
 {
-// log_debug("http(%d)::unlock()", fd); 
 	locked = false;
 }
 
@@ -430,8 +420,6 @@ void blizzard::http::add_response_buffer(const char* data, size_t size)
 
 void blizzard::http::process()
 {
-	/* log_debug("blizzard::http::process()"); */
-
 	bool quit = false;
 	int res = 0;
 
@@ -440,94 +428,68 @@ void blizzard::http::process()
 		switch(state_)
 		{
 		case sUndefined:
-
 			want_read = true;
 			want_write = false;
-
 			state_ = sReadingHead;
-
 			break;
 
 		case sReadingHead:
-			/* log_debug("blizzard::http::process(): sReadingHead"); */
 			res = parse_title();
-
-			if(res > 0)
+			if (res > 0)
 			{
-				/* log_debug("process():  parse_title() error %d", res); */
 				state_ = sDone;
 				quit = true;
 			}
-			else if(res < 0)
+			else if (res < 0)
 			{
 				quit = true;
 			}
-
 			break;
 
 		case sReadingHeaders:
-			/* log_debug("blizzard::http::process(): sReadingHeaders"); */
 			res = parse_header_line();
-
-			if(res > 0)
+			if (res > 0)
 			{
-				/* log_debug("process():  parse_header_line() error %d", res); */
 				state_ = sDone;
 				quit = true;
 			}
-			else if(res < 0)
+			else if (res < 0)
 			{
 				quit = true;
 			}
-
-			if(state_ == sReadyToHandle)
+			if (state_ == sReadyToHandle)
 			{
 				quit = true;
 			}
-
 			break;
 
 		case sReadingPost:
-			//in_post.print();
 			res = parse_post();
-			//in_post.print();
-			if(res < 0)
+			if (res < 0)
 			{
 				quit = true;
 			}
-
 			break;
 
 		case sReadyToHandle:
-			/* log_debug("blizzard::http::process(): sReadyToHandle"); */
-
 			commit();
 			state_ = sWriting;
-//            commit();
-
 			break;
 
 		case sWriting:
-			/* log_debug("sWriting:"); */
 			want_write = true;
-
 			res = write_data();
-
-			if(res < 0)
+			if (res < 0)
 			{
 				quit = true;
 			}
-
 			break;
 
 		case sDone:
-			/* log_debug("blizzard::http::process(): sDone reached!"); */
 			quit = true;
-
 			break;
 
 		default:
-
 			break;
 		}
 	}
@@ -537,9 +499,6 @@ bool blizzard::http::network_tryread()
 {
 	if (-1 != fd)
 	{
-		/* log_debug("blizzard::http::process::ready_read(%d)", fd); */
-		/* log_debug("read{c:%d w:%d st:%d}, write{c:%d w:%d st:%d}", can_read, want_read, stop_reading, can_write, want_write, stop_writing); */
-
 		while (can_read && !stop_reading/* && want_read*/)
 		{
 			if (!in_headers.read_from_fd(fd, can_read, want_read, stop_reading))
@@ -559,14 +518,10 @@ bool blizzard::http::network_trywrite()
 {
 	if(-1 != fd)
 	{
-		/* log_debug("blizzard::http::process::ready_write(%d)", fd); */
-		/* log_debug("read{c:%d w:%d st:%d}, write{c:%d w:%d st:%d}", can_read,  want_read, stop_reading, can_write, want_write, stop_writing); */
-
 		bool want_write = true;
 
 		if (can_write && !stop_writing)
 		{
-			/* log_debug("out_title.write_to_fd"); */
 			out_title.write_to_fd(fd, can_write, want_write, stop_writing);
 		}
 
@@ -575,14 +530,12 @@ bool blizzard::http::network_trywrite()
 		/* XXX remove explicit check for 0 != out_post.get_data_size() */
 		if (out_post.get_data_size() && can_write && !stop_writing)
 		{
-			/* log_debug("out_post.write_to_fd"); */
 			out_post.write_to_fd(fd, can_write, want_write, stop_writing);
 		}
 
 		/* XXX remove explicit check for 0 == out_post.get_data_size() */
 		if (0 == out_post.get_data_size() || !want_write || stop_writing)
 		{
-			/* log_debug("all writings done"); */
 			set_wreof();
 		}
 	}
@@ -653,7 +606,6 @@ char * blizzard::http::read_header_line()
 		}
 		else //can read && !want_read && !stop_reading
 		{
-			/* log_message_r(LOG_ERROR, "header is larger than %d", (int)in_headers.page_size()); */
 			state_ = sDone;
 			break;
 		}
@@ -664,15 +616,11 @@ char * blizzard::http::read_header_line()
 
 int blizzard::http::parse_title()
 {
-	/* log_debug("parse_title()"); */
 	char * line = read_header_line();
 	if(!line)
 	{
-		/* log_debug("got 0"); */
 		return -1;
 	}
-
-	/* log_debug("read_header_line() = '%s'", line); */
 
 	state_ = sDone;
 
@@ -755,29 +703,23 @@ int blizzard::http::parse_title()
 
 int blizzard::http::parse_header_line()
 {
-	/* log_debug("parse_header_line()"); */
 	char * key = read_header_line();
 	if(!key)
 	{
 		return -1;
 	}
 
-	/* log_debug("read_header_line() = '%s'", key); */
-
 	if(0 == *key)
 	{
 		if(method == BLZ_METHOD_POST)
 		{
 			state_ = sReadingPost;
-			/* log_debug("->sReadingPost"); */
 
 			in_post.append_data((char*)in_headers.get_data() + in_headers.marker(), in_headers.get_data_size() - in_headers.marker());
 		}
 		else
 		{
 			state_ = sReadyToHandle;
-
-			/* log_debug("->sReadyToHandle"); */
 		}
 
 		return 0;
@@ -789,7 +731,7 @@ int blizzard::http::parse_header_line()
 	char * val = strchr(key, ':');
 	if(!val)
 	{
-		return 400;                              
+		return 400;
 	}
 
 	*val++ = 0;
@@ -799,11 +741,7 @@ int blizzard::http::parse_header_line()
 	{
 		header_items[header_items_num].key = key;
 		header_items[header_items_num].value = val;
-
 		header_items_num++;
-
-		/* log_debug("header_items['%s']='%s'", key, val); */
-
 	}
 
 	if(!strcasecmp(key, "connection") && !strcmp(val, "keep-alive"))
@@ -814,18 +752,16 @@ int blizzard::http::parse_header_line()
 	{
 		int sz = atoi(val);
 		in_post.resize(sz);
-
-		/* log_debug("post body found (%d bytes)", sz); */
 	}
 	else if(!strcasecmp(key, "expect") && !strcasecmp(val, "100-continue")) //EVIL HACK for answering on "Expect: 100-continue"
-	{       
+	{
 		const char * ret_str = "HTTP/1.1 100 Continue\r\n\r\n";
 		int ret_str_sz = 25;//strlen(ret_str);
-		
+
 		ssize_t wr = write(fd, ret_str, ret_str_sz);
 		if(wr == -1 || wr < ret_str_sz)
 		{
-					  log_warn("client didn't receive '100 Continue'");       
+			log_warn("client didn't receive '100 Continue'");
 		}
 	}
 
@@ -836,15 +772,13 @@ int blizzard::http::parse_header_line()
 
 int blizzard::http::parse_post()
 {
-	/* log_debug("parse_post() (%d bytes)", (int)in_post.size()); */
-
 	in_post.read_from_fd(fd, can_read, want_read, stop_reading);
 
 	if(in_post.size() == in_post.capacity())
 	{
 		state_ = sReadyToHandle;
 	}
-	
+
 	if(stop_reading && state_ != sReadyToHandle)
 	{
 		response_status = 400;
@@ -888,9 +822,6 @@ int blizzard::http::commit()
 	{
 		const char m[] = "Pragma: no-cache\r\nCache-control: no-cache\r\n";
 		out_headers.append_data(m, sizeof(m) - 1);
-
-		/* add_response_header("Pragma", "no-cache"); */
-		/* add_response_header("Cache-control", "no-cache"); */
 	}
 
 	if (keep_alive)
@@ -914,9 +845,6 @@ int blizzard::http::commit()
 
 	out_title.append_data(out_headers.get_data(), out_headers.get_data_size());
 
-	//log_debug("out_headers:---\n%s\n---", (char*)out_headers.get_data());
-
 	return 0;
 }
 
-//-------------------------------------------------------------------------------------------------------------------
