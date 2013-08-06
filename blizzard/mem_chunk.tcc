@@ -102,7 +102,7 @@ inline size_t mem_chunk<data_size>::append_data(const void * data, size_t data_s
 
 	size_t total_to_write = data_sz;
 
-	if(next)
+	if (next)
 	{
 		while(cur_page->next)
 		{
@@ -117,9 +117,9 @@ inline size_t mem_chunk<data_size>::append_data(const void * data, size_t data_s
 
 		while(total_to_write)
 		{
-			if(cur_page->sz >= cur_page->page_size())
+			if (cur_page->sz >= cur_page->page_size())
 			{
-				if(cur_page->can_expand)
+				if (cur_page->can_expand)
 				{
 					cur_page->insert_page();
 					cur_page = cur_page->next;
@@ -252,19 +252,19 @@ inline bool mem_chunk<data_size>::read_from_fd(int fd, bool& can_read, bool& wan
 	while(true)
 	{
 		ssize_t to_read = cur_page->page_size() - cur_page->get_data_size();
-		if(to_read)
+		if (to_read)
 		{
 			ssize_t    rd = read(fd, cur_page->page + cur_page->get_data_size(), to_read);
-			if(-1 == rd)
+			if (-1 == rd)
 			{
 			/* log_debug("process/read error: '%s'", coda_strerror(errno)); */
-				if(EAGAIN == errno)
+				if (EAGAIN == errno)
 				{
 					can_read = false;
 
 					return true;
 				}
-				else if(EINTR != errno)
+				else if (EINTR != errno)
 				{
 					log_err(errno, "chunk/read error");
 					can_read = false;
@@ -275,13 +275,13 @@ inline bool mem_chunk<data_size>::read_from_fd(int fd, bool& can_read, bool& wan
 					log_debug("chunk/read: EINTR");
 				}
 			}
-			else if(rd)
+			else if (rd)
 			{
 				cur_page->sz += rd;
 								
 				failed = false;
 				
-				if(rd < to_read)
+				if (rd < to_read)
 				{
 					can_read = false;
 
@@ -297,16 +297,16 @@ inline bool mem_chunk<data_size>::read_from_fd(int fd, bool& can_read, bool& wan
 				return true;
 			}
 		}
-		else if(can_expand)
+		else if (can_expand)
 		{
 			insert_page();
 		}
-		else if(failed)
+		else if (failed)
 		{
 				   return false;
 		}
 
-		if(cur_page->next)
+		if (cur_page->next)
 		{
 			cur_page = cur_page->next;
 		}
@@ -358,7 +358,7 @@ inline size_t& mem_block::marker()
 
 inline void mem_block::resize(size_t sz)
 {
-	if(page)
+	if (page)
 	{
 		delete[] page;
 
@@ -366,7 +366,7 @@ inline void mem_block::resize(size_t sz)
 		page_capacity = 0;
 	}
 
-	if(sz)
+	if (sz)
 	{
 		page = new uint8_t[sz];
 
@@ -435,7 +435,7 @@ inline bool mem_block::write_to_fd(int fd, bool& can_write, bool& want_write, bo
 					break;
 				}
 			}
-			else if(wr)
+			else if (wr)
 			{
 				current += wr;
 
@@ -472,18 +472,18 @@ inline bool mem_block::read_from_fd(int fd, bool& can_read, bool& want_read, boo
 	while(true)
 	{
 		ssize_t to_read = capacity() - size();
-		if(to_read)
+		if (to_read)
 		{
 			ssize_t    rd = read(fd, page + size(), to_read);
-			if(-1 == rd)
+			if (-1 == rd)
 			{
-				if(EAGAIN == errno)
+				if (EAGAIN == errno)
 				{
 					can_read = false;
 
 					return false;
 				}
-				else if(EINTR != errno)
+				else if (EINTR != errno)
 				{
 					log_err(errno, "block/read error");
 					can_read = false;
@@ -494,11 +494,11 @@ inline bool mem_block::read_from_fd(int fd, bool& can_read, bool& want_read, boo
 					log_debug("block/read: EINTR");
 				}
 			}
-			else if(rd)
+			else if (rd)
 			{
 				page_sz += rd;
 
-				if(rd < to_read)
+				if (rd < to_read)
 				{
 					can_read = false;
 				}

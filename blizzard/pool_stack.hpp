@@ -17,7 +17,7 @@ public:
 
 	void push(_DATA l)
 	{
-		if(current + 1 >= reserved)
+		if (current + 1 >= reserved)
 		{
 			reserve(2 * reserved);
 		}
@@ -31,7 +31,7 @@ public:
 
 		size_t to_wr = size() < sz ? size() : sz;
 
-		if(to_wr)
+		if (to_wr)
 		{
 			memcpy(_t, buffer, to_wr * sizeof(_DATA));
 		}

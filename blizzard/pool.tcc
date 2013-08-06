@@ -10,7 +10,7 @@ inline pool<T, objects_per_page>::page::~page()
 {
 	delete[] data;
 
-	if(next)
+	if (next)
 	{
 		delete next;
 	}
@@ -31,7 +31,7 @@ inline void pool<T, objects_per_page>::page::attach(pool<T, objects_per_page>::p
 template <typename T, int objects_per_page>
 inline T * pool<T, objects_per_page>::page::allocate()
 {
-	if(full())
+	if (full())
 	{
 		 return 0;
 	}
@@ -91,7 +91,7 @@ inline T * pool<T, objects_per_page>::allocate()
 {
 	T * ret_ptr = 0;
 
-	if(!free_nodes.empty())
+	if (!free_nodes.empty())
 	{
 		ret_ptr = free_nodes.pop();
 	}
@@ -99,7 +99,7 @@ inline T * pool<T, objects_per_page>::allocate()
 	{
 		ret_ptr = root->allocate();
 
-		if(0 == ret_ptr)
+		if (0 == ret_ptr)
 		{
 			page * n = root;
 			root = new page;
