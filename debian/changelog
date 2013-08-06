@@ -1,3 +1,9 @@
+blizzard (0.0.1-4) unstable; urgency=low
+
+  * don't strip binary when building
+
+ -- unknown <bachan@sample-sandbox1g.dev.itim.vn>  Tue, 06 Aug 2013 15:11:58 +0700
+
 blizzard (0.0.1-3) unstable; urgency=low
 
   * rotate_custom_logs plugin method
