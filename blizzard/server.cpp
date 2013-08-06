@@ -93,7 +93,7 @@ void blizzard::server::init_threads()
 
 	log_info("requested worker threads {easy: %d, hard: %d}", config.blz.plugin.easy_threads, config.blz.plugin.hard_threads);
 
-	for(int i = 0; i < config.blz.plugin.easy_threads; i++)
+	for (int i = 0; i < config.blz.plugin.easy_threads; i++)
 	{
 		pthread_t th;
 		int r = pthread_create(&th, NULL, &easy_loop_function, this);
@@ -110,7 +110,7 @@ void blizzard::server::init_threads()
 		}
 	}
 
-	for(int i = 0; i < config.blz.plugin.hard_threads; i++)
+	for (int i = 0; i < config.blz.plugin.hard_threads; i++)
 	{
 		pthread_t th;
 		int r = pthread_create(&th, NULL, &hard_loop_function, this);

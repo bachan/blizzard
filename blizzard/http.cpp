@@ -89,12 +89,12 @@ blizzard::http::http() :
 
 	if (0 == http_codes)
 	{
-		for(uint32_t i = 0; i < HTTP_CODES_MAX_SIZE; i++)
+		for (uint32_t i = 0; i < HTTP_CODES_MAX_SIZE; i++)
 		{
 			 http_codes_array[i] = "Unknown";
 		}
 
-		for(uint32_t j = 0; j < codes_table_sz; j++)
+		for (uint32_t j = 0; j < codes_table_sz; j++)
 		{
 			int key = codes_table[j].code;
 
@@ -366,10 +366,12 @@ const uint8_t * blizzard::http::get_request_body()const
 
 const char * blizzard::http::get_request_header(const char * hk)const
 {
-	for(size_t i = 0; i < get_request_headers_num(); i++)
+	for (size_t i = 0; i < get_request_headers_num(); i++)
 	{
 		if (!strcasecmp(header_items[i].key, hk))
+		{
 			return header_items[i].value;
+		}
 	}
 
 	return 0;
@@ -791,14 +793,13 @@ int blizzard::http::parse_post()
 int blizzard::http::commit()
 {
 	char buff[1024];
-
 	char now_str[128];
 	time_t now_time;
 	time(&now_time);
 	memset(now_str, 0, 128);
 	strftime(now_str, 127, "%a, %d %b %Y %H:%M:%S GMT", gmtime(&now_time));
 
-		const char * resp_status_str = "Unknown";
+	const char * resp_status_str = "Unknown";
 
 	if (response_status >= http_codes_num || response_status == 0)
 	{
@@ -806,15 +807,15 @@ int blizzard::http::commit()
 	}
 	else
 	{
-			 resp_status_str = http_codes[response_status];
+		resp_status_str = http_codes[response_status];
 	}
 
 
 	int l = snprintf(buff, 1023,
-			"HTTP/%d.%d %d %s\r\n"
-			"Server: blizzard/" BLZ_VERSION "\r\n"
-			"Date: %s\r\n",
-			   protocol_major, protocol_minor, response_status, resp_status_str, now_str);
+		"HTTP/%d.%d %d %s\r\n"
+		"Server: blizzard/" BLZ_VERSION "\r\n"
+		"Date: %s\r\n",
+		protocol_major, protocol_minor, response_status, resp_status_str, now_str);
 
 	out_title.append_data(buff, l);
 
