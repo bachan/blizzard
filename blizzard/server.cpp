@@ -20,13 +20,11 @@ namespace blizzard
 	void* event_loop_function(void* ptr);
 	void*  easy_loop_function(void* ptr);
 	void*  hard_loop_function(void* ptr);
-	void* stats_loop_function(void* ptr);
 	void*  idle_loop_function(void* ptr);
 }
 
 blizzard::server::server()
 	: incoming_sock(-1)
-	, stats_sock(-1)
 	, wakeup_isock(-1)
 	, wakeup_osock(-1)
 	, threads_num(0)
@@ -37,11 +35,9 @@ blizzard::server::server()
 
 	pthread_mutex_init(&easy_proc_mutex, 0);
 	pthread_mutex_init(&hard_proc_mutex, 0);
-	pthread_mutex_init(&stats_proc_mutex, 0);
 
 	pthread_cond_init(&easy_proc_cond, 0);
 	pthread_cond_init(&hard_proc_cond, 0);
-	pthread_cond_init(&stats_proc_cond, 0);
 
 	start_time = time(NULL);
 }
@@ -57,11 +53,9 @@ blizzard::server::~server()
 
 	fire_all_threads();
 
-	pthread_cond_destroy(&stats_proc_cond);
 	pthread_cond_destroy(&hard_proc_cond);
 	pthread_cond_destroy(&easy_proc_cond);
 
-	pthread_mutex_destroy(&stats_proc_mutex);
 	pthread_mutex_destroy(&hard_proc_mutex);
 	pthread_mutex_destroy(&easy_proc_mutex);
 
@@ -95,15 +89,6 @@ void blizzard::server::init_threads()
 		throw coda_error("error creating idle thread");
 	}
 
-	if (0 == pthread_create(&stats_th, NULL, &stats_loop_function, this))
-	{
-		threads_num++;
-		log_debug("stats thread created");
-	}
-	else
-	{
-		throw coda_error("error creating stats thread");
-	}
 	log_info("%d internal threads created", threads_num);
 
 	log_info("requested worker threads {easy: %d, hard: %d}", config.blz.plugin.easy_threads, config.blz.plugin.hard_threads);
@@ -158,11 +143,6 @@ void blizzard::server::join_threads()
 
 	pthread_join(idle_th, NULL);
 	log_info("idle_th joined");
-	threads_num--;
-
-	pthread_cancel(stats_th); /* XXX hack for FreeBSD blocking accept (why on Earth doesn't it needed under Linux?) */
-	pthread_join(stats_th, NULL);
-	log_info("stats_th joined");
 	threads_num--;
 
 	for (size_t i = 0; i < easy_th.size(); i++)
@@ -264,7 +244,6 @@ bool blizzard::server::pop_easy_or_wait(http** el)
 	pthread_mutex_lock(&easy_proc_mutex);
 
 	size_t eq_sz = easy_queue.size();
-	
 	stats.report_easy_queue_len(eq_sz);
 
 	if (eq_sz)
@@ -296,7 +275,6 @@ bool blizzard::server::push_hard(http * el)
 	pthread_mutex_lock(&hard_proc_mutex);
 
 	size_t hq_sz = hard_queue.size();
-
 	stats.report_hard_queue_len(hq_sz);
 
 	if (config.blz.plugin.hard_queue_limit == 0 || (hq_sz < (size_t)config.blz.plugin.hard_queue_limit))
@@ -322,7 +300,6 @@ bool blizzard::server::pop_hard_or_wait(http** el)
 	pthread_mutex_lock(&hard_proc_mutex);
 		
 	size_t hq_sz = hard_queue.size(); 
-	
 	stats.report_hard_queue_len(hq_sz);
 
 	if (hq_sz)
@@ -351,7 +328,6 @@ bool blizzard::server::push_done(http * el)
 	pthread_mutex_lock(&done_mutex);
 
 	done_queue.push_back(el);
-
 	stats.report_done_queue_len(done_queue.size());
 
 	log_debug("push_done %d", el->get_fd());
@@ -370,7 +346,6 @@ bool blizzard::server::pop_done(http** el)
 	pthread_mutex_lock(&done_mutex);
 
 	size_t dq_sz = done_queue.size(); 
-
 	stats.report_done_queue_len(dq_sz);
 
 	if (dq_sz)
@@ -503,13 +478,6 @@ void blizzard::server::prepare()
 	ev_io_init(&incoming_watcher, incoming_callback, incoming_sock, EV_READ);
 	ev_io_start(loop, &incoming_watcher);
 
-	if (0 > (stats_sock = coda_listen(config.blz.stats.ip.c_str(), config.blz.stats.port.c_str(), 1024, 0)))
-	{
-		throw coda_error("can't bound stats to %s:%s (%d: %s)", config.blz.stats.ip.c_str(), config.blz.stats.port.c_str(), errno, coda_strerror(errno));
-	}
-
-	coda_set_socket_timeout(stats_sock, 50000);
-
 	int pipefd[2];
 	if (::pipe(pipefd) == -1)
 	{
@@ -533,12 +501,6 @@ void blizzard::server::finalize()
 		incoming_sock = -1;
 	}
 
-	if (-1 != stats_sock)
-	{
-		close(stats_sock);
-		stats_sock = -1;
-	}
-
 	if (-1 != wakeup_isock)
 	{
 		close(wakeup_isock);
@@ -556,32 +518,7 @@ void blizzard::server::finalize()
 
 void blizzard::server::event_processing_loop()
 {
-#if 0
-	http *con = 0;
-	while (pop_done(&con))
-	{
-		ev_io_start(loop, &con->e.watcher_send);
-
-		con->unlock();
-
- 		if (-1 != con->get_fd())
-		{
-			process(con);
-		}
-		else
-		{
-			con->destroy();
-			http_pool.free(con);
-		}
-	}
-#endif
-
-	// ev_run(loop, EVRUN_ONCE);
 	ev_run(loop, 0);
-
-	// fds.kill_oldest(1000 * config.blz.plugin.connection_timeout);
-
-	// stats.process();
 }
 
 bool blizzard::server::process(http * con)
@@ -631,44 +568,57 @@ void blizzard::server::easy_processing_loop()
 	{
 		log_debug("blizzard::easy_loop_function.fd = %d", task->get_fd());
 
-		switch (plugin->easy(task))
+		if (task->get_request_uri_path() == config.blz.stats.uri)
 		{
-		case BLZ_OK:
-			log_debug("easy_loop: processed %d", task->get_fd());
-			push_done(task);
-			break;
+			std::string xml;
+			stats.generate_xml(xml, start_time);
 
-		case BLZ_ERROR:
-			log_error("easy thread reports error");
-			task->set_response_status(503);
+			task->set_response_status(200);
 			task->add_response_header("Content-type", "text/plain");
-			task->add_response_buffer("easy loop error", strlen("easy loop error"));
+			task->add_response_buffer(xml.c_str(), xml.size());
 			push_done(task);
-			break;
+		}
+		else
+		{
+			switch (plugin->easy(task))
+			{
+			case BLZ_OK:
+				log_debug("easy_loop: processed %d", task->get_fd());
+				push_done(task);
+				break;
 
-		case BLZ_AGAIN:
-			log_debug("easy thread -> hard thread");
-			if (config.blz.plugin.hard_threads)
-			{
-				bool ret = push_hard(task);
-				if (false == ret)
-				{
-					log_debug("hard queue full: hard_queue_size == %d", config.blz.plugin.hard_queue_limit);
-					task->set_response_status(503);
-					task->add_response_header("Content-type", "text/plain");
-					task->add_response_buffer("hard queue filled!", strlen("hard queue filled!"));
-					push_done(task);
-				}
-			}
-			else
-			{
-				log_error("easy-thread tried to enqueue hard-thread, but config::plugin::hard_threads = 0");
+			case BLZ_ERROR:
+				log_error("easy thread reports error");
 				task->set_response_status(503);
 				task->add_response_header("Content-type", "text/plain");
 				task->add_response_buffer("easy loop error", strlen("easy loop error"));
 				push_done(task);
+				break;
+
+			case BLZ_AGAIN:
+				log_debug("easy thread -> hard thread");
+				if (config.blz.plugin.hard_threads)
+				{
+					bool ret = push_hard(task);
+					if (false == ret)
+					{
+						log_debug("hard queue full: hard_queue_size == %d", config.blz.plugin.hard_queue_limit);
+						task->set_response_status(503);
+						task->add_response_header("Content-type", "text/plain");
+						task->add_response_buffer("hard queue filled!", strlen("hard queue filled!"));
+						push_done(task);
+					}
+				}
+				else
+				{
+					log_error("easy-thread tried to enqueue hard-thread, but config::plugin::hard_threads = 0");
+					task->set_response_status(503);
+					task->add_response_header("Content-type", "text/plain");
+					task->add_response_buffer("easy loop error", strlen("easy loop error"));
+					push_done(task);
+				}
+				break;
 			}
-			break;
 		}
 	}
 }
@@ -802,110 +752,6 @@ void *blizzard::idle_loop_function(void *ptr)
 	{
 		coda_terminate = 1;
 		log_crit("idle_loop: exception: %s", e.what());
-	}
-
-	srv->fire_all_threads();
-	pthread_exit(NULL);
-}
-
-void *blizzard::stats_loop_function(void *ptr)
-{
-	log_thread_name_set("BLZ_STATS");
-	blizzard::server *srv = (blizzard::server *) ptr;
-	blizzard::http stats_parser;
-
-	try
-	{
-		while (0 == coda_terminate && 0 == coda_changecfg)
-		{
-			if (srv->stats_sock != -1)
-			{
-				struct in_addr ip;
-				int stats_client = coda_accept(srv->stats_sock, &ip, 0);
-
-				if (stats_client >= 0)
-				{
-					coda_set_socket_timeout(stats_client, 50000);
-
-					log_debug("stats: accept_connection: %d from %s", stats_client, inet_ntoa(ip));
-
-					stats_parser.init(stats_client, ip);
-
-					while (true)
-					{
-						stats_parser.allow_read();
-						stats_parser.allow_write();
-
-						stats_parser.process();
-
-						if (stats_parser.state() == http::sReadyToHandle)
-						{
-							stats_parser.set_response_status(200);
-							stats_parser.add_response_header("Content-type", "text/plain");
-
-							std::string resp = "<blizzard_stats>\n";
-
-							char buff[1024];
-
-							time_t up_time = time(0) - srv->start_time;
-
-							snprintf(buff, 1024, "\t<blizzard_version>"BLZ_VERSION"</blizzard_version>\n\t<uptime>%d</uptime>\n", (int)up_time);
-							resp += buff;
-
-							snprintf(buff, 1024, "\t<rps>%.4f</rps>\n", stats.get_rps());
-							resp += buff;
-
-							snprintf(buff, 1024, "\t<queues>\n\t\t<easy>%d</easy>\n\t\t<max_easy>%d</max_easy>\n"
-								"\t\t<hard>%d</hard>\n\t\t<max_hard>%d</max_hard>\n\t\t<done>%d</done>\n"
-								"\t\t<max_done>%d</max_done>\n\t</queues>\n",
-									(int)stats.easy_queue_len,
-									(int)stats.easy_queue_max_len,
-									(int)stats.hard_queue_len,
-									(int)stats.hard_queue_max_len,
-									(int)stats.done_queue_len,
-									(int)stats.done_queue_max_len);
-							resp += buff;
-
-							snprintf(buff, 1024, "\t<conn_time>\n\t\t<min>%.4f</min>\n\t\t<avg>%.4f</avg>\n\t\t<max>%.4f</max>\n\t</conn_time>\n",
-									stats.get_min_lifetime(), stats.get_mid_lifetime(), stats.get_max_lifetime());
-							resp += buff;
-
-							snprintf(buff, 1024, "\t<mem_allocator>\n\t\t<pages>%d</pages>\n\t\t<objects>%d</objects>\n\t</mem_allocator>\n",
-									(int)stats.pages_in_http_pool, (int)stats.objects_in_http_pool);
-							resp += buff;
-
-							struct rusage usage;
-							::getrusage(RUSAGE_SELF, &usage);
-
-							snprintf(buff, 1024, "\t<rusage>\n\t\t<utime>%d</utime>\n\t\t<stime>%d</stime>\n\t</rusage>\n",
-									(int)usage.ru_utime.tv_sec, (int)usage.ru_stime.tv_sec);
-							resp += buff;
-
-							resp += "</blizzard_stats>\n";
-
-							stats_parser.add_response_buffer(resp.data(), resp.size());
-						}
-						else if (stats_parser.state() == http::sDone)
-						{
-							log_debug("%d is done, closing write side of connection", stats_parser.get_fd());
-							break;
-						}
-					}
-
-					stats_parser.destroy();
-					stats.process(time(0));
-				}
-			}
-			else
-			{
-				sleep(1);
-			}
-		}
-	}
-	catch (const std::exception &e)
-	{
-		coda_terminate = 1;
-		log_crit("stats_loop: exception: %s", e.what());
 	}
 
 	srv->fire_all_threads();

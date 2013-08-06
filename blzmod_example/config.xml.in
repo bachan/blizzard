@@ -3,7 +3,7 @@
 	<log_file_name>@CMAKE_INSTALL_PREFIX@/var/log/blizzard_example.log</log_file_name>
 	<log_level>info</log_level>
 
-	<stats ip="0.0.0.0" port="11119" />
+	<stats uri="/stats" />
 
 	<plugin ip="0.0.0.0" port="19999" >
 		<connection_timeout>100000</connection_timeout>

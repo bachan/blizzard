@@ -3,6 +3,7 @@
 
 #include <stdint.h>
 #include <time.h>
+#include <string>
 
 namespace blizzard {
 
@@ -49,6 +50,8 @@ public:
 	double get_max_lifetime() const;
 
 	double get_rps() const;
+
+	void generate_xml(std::string &xml, time_t start_time);
 };
 
 } /* namespace blizzard */

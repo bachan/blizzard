@@ -154,7 +154,7 @@ static void timeout_callback(EV_P_ ev_timer *w, int tev)
 	blizzard::events *e = memberof(blizzard::events, watcher_timeout, w);
 	blizzard::http *con = e->con;
 
-log_warn("timeout: is_locked=%d, state=%d, fd=%d", con->is_locked(), con->state(), con->get_fd());
+	log_warn("timeout: is_locked=%d, state=%d, fd=%d", con->is_locked(), con->state(), con->get_fd());
 
 	if (!con->is_locked())
 	{
@@ -620,6 +620,13 @@ char * blizzard::http::read_header_line()
 			break;
 		}
 
+		/* if we got EOF before reading all header lines, it means that request is done */
+		if (stop_reading)
+		{
+			state_ = sDone;
+			break;
+		}
+
 		char * headers_data = (char*)in_headers.get_data();
 		headers_data[in_headers.get_data_size()] = 0;
 
@@ -652,7 +659,7 @@ char * blizzard::http::read_header_line()
 		}
 	}
 
-	return 0;
+	return NULL;
 }
 
 int blizzard::http::parse_title()

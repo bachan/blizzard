@@ -19,21 +19,18 @@ struct blz_config : public coda::txml_determination_object
 
 		struct STATS : public coda::txml_determination_object
 		{
-			std::string ip;
-			std::string port;
+			std::string uri;
 
 			STATS() {}
 
 			void determine(coda::txml_parser* p)
 			{
-				txml_member(p, ip);
-				txml_member(p, port);
+				txml_member(p, uri);
 			}
 
 			void clear()
 			{
-				ip.clear();
-				port.clear();
+				uri.clear();
 			}
 
 			void check(const char *par, const char *ns)
@@ -41,8 +38,7 @@ struct blz_config : public coda::txml_determination_object
 				char curns [SRV_BUF];
 				snprintf(curns, SRV_BUF, "%s:%s", par, ns);
 
-				if (ip  .empty()) throw coda_error ("<%s:ip> is empty in config", curns);
-				if (port.empty()) throw coda_error ("<%s:port> is empty in config", curns);
+				if (uri.empty()) throw coda_error("<%s:uri> is empty in config", curns);
 			}
 		};
 

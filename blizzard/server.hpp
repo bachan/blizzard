@@ -22,15 +22,12 @@ struct server
 	pthread_t event_th;
 	std::vector<pthread_t> easy_th;
 	std::vector<pthread_t> hard_th;
-	pthread_t stats_th;
 	pthread_t idle_th;
 
 	mutable pthread_mutex_t easy_proc_mutex;
 	mutable pthread_cond_t  easy_proc_cond;
 	mutable pthread_mutex_t hard_proc_mutex;
 	mutable pthread_cond_t  hard_proc_cond;
-	mutable pthread_mutex_t stats_proc_mutex;
-	mutable pthread_cond_t  stats_proc_cond;
 	mutable pthread_mutex_t	done_mutex;
 
 	std::deque<http*> easy_queue;
@@ -43,7 +40,6 @@ struct server
 	blz_config config;
 
 	int incoming_sock;
-	int stats_sock;
 	int wakeup_isock;
 	int wakeup_osock;
 	int threads_num;
@@ -88,7 +84,6 @@ struct server
 	friend void* event_loop_function(void* ptr);
 	friend void*  easy_loop_function(void* ptr);
 	friend void*  hard_loop_function(void* ptr);
-	friend void* stats_loop_function(void* ptr);
 	friend void*  idle_loop_function(void* ptr);
 
 public:
