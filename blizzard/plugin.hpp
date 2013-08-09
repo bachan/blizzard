@@ -6,7 +6,7 @@
 #include <arpa/inet.h>
 #include <sys/types.h>
 
-#define BLZ_VERSION "0.3.0" /* major.minor.patch[.quickfix] */
+#define BLZ_VERSION "0.3.1" /* major.minor.patch[.quickfix] */
 #define BLZ_VERSION_BINARY (0 << 24) + (3 << 16) + (0 << 8) + 0
 
 #define BLZ_METHOD_UNDEF 0

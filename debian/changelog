@@ -1,3 +1,9 @@
+blizzard (0.3.1-1) unstable; urgency=high
+
+  * fixed rps calculation for statistics
+
+ -- Sergey Bochenkov <ba4an@yandex.ru>  Fri, 09 Aug 2013 16:56:00 +0700
+
 blizzard (0.0.1-5) unstable; urgency=high
 
   * fixed inifinite loop in statistics
