@@ -79,29 +79,29 @@ Cервер стартует, парсит свой конфиг, создаёт
 в следующем формате:
 
   <blizzard_stats>                                           
-      <blizzard_version>0.2.2</blizzard_version>
+      <blizzard_version>0.3.2</blizzard_version>
       <uptime>287</uptime>                     # в секундах
-      <rps>1105.2500</rps>                     # запросов в секунду
+      <rps>1105.250</rps>                      # запросов в секунду
       <queues>                                 # размеры очередей
           <easy>2</easy>                       # мгновенный размер
-          <max_easy>1</max_easy>               # максимальный размер за 4 секунды
+          <max_easy>1</max_easy>               # максимальный размер за предыдущие 4 секунды
           <hard>0</hard>
           <max_hard>0</max_hard>
           <done>0</done>
           <max_done>1</max_done>
       </queues>
-      <conn_time>                              # времена обработки запросов
-          <min>0.1275</min>
-          <avg>1.3421</avg>
-          <max>8.6744</max>
-      </conn_time>
+      <response_time>                          # времена обработки запросов (в секундах)
+          <min>0.127500</min>                  # минимальное за предыдущие 4 секунды
+          <avg>1.342132</avg>                  # среднее за предыдущие 4 секунды
+          <max>8.674405</max>                  # максимальное за предыдущие 4 секунды
+      </response_time>
       <mem_allocator>                          # данные аллокатора памяти
-          <pages>1</pages>
-          <objects>8</objects>
+          <pages>1</pages>                     # кол-во выделенных страниц в http-пуле
+          <objects>8</objects>                 # кол-во выделенных объектов в http-пуле
       </mem_allocator>
       <rusage>                                 # данные rusage для blizzard-а
-          <utime>2</utime>
-          <stime>4</stime>
+          <utime>2</utime>                     # время в userspace
+          <stime>4</stime>                     # время в system
       </rusage>
   </blizzard_stats>
 
