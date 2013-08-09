@@ -102,7 +102,7 @@ inline size_t mem_chunk<data_size>::append_data(const void * data, size_t data_s
 
 	if (next)
 	{
-		while(cur_page->next)
+		while (cur_page->next)
 		{
 			cur_page = cur_page->next;
 		}
@@ -113,7 +113,7 @@ inline size_t mem_chunk<data_size>::append_data(const void * data, size_t data_s
 	{
 		const uint8_t * p = static_cast<const uint8_t*>(data);
 
-		while(total_to_write)
+		while (total_to_write)
 		{
 			if (cur_page->sz >= cur_page->page_size())
 			{
@@ -149,7 +149,7 @@ inline void mem_chunk<data_size>::print()
 {
 	int ch_n = 0;
 	mem_chunk<data_size> * cur_page = this;
-	while(cur_page)
+	while (cur_page)
 	{
 		char u[1024];
 		memset(u, 0, 1024);
@@ -236,12 +236,12 @@ inline bool mem_chunk<data_size>::read_from_fd(int fd, bool& can_read, bool& wan
 		
 	bool failed = true;
 
-	while(cur_page->next && (cur_page->page_size() == cur_page->get_data_size()))
+	while (cur_page->next && (cur_page->page_size() == cur_page->get_data_size()))
 	{
 		cur_page = cur_page->next;
 	}
 
-	while(true)
+	while (true)
 	{
 		ssize_t to_read = cur_page->page_size() - cur_page->get_data_size();
 		if (to_read)
@@ -398,7 +398,7 @@ inline size_t mem_block::append_data(const void * data, size_t data_sz)
 
 inline bool mem_block::write_to_fd(int fd, bool& can_write, bool& want_write, bool& wreof)
 {
-	while(true)
+	while (true)
 	{
 		ssize_t to_write = size() - marker();
 		if (to_write)
@@ -455,7 +455,7 @@ inline bool mem_block::write_to_fd(int fd, bool& can_write, bool& want_write, bo
 
 inline bool mem_block::read_from_fd(int fd, bool& can_read, bool& want_read, bool& rdeof)
 {
-	while(true)
+	while (true)
 	{
 		ssize_t to_read = capacity() - size();
 		if (to_read)

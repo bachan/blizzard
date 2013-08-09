@@ -424,7 +424,7 @@ void blizzard::http::process()
 	bool quit = false;
 	int res = 0;
 
-	while(!quit)
+	while (!quit)
 	{
 		switch (state_)
 		{
@@ -627,7 +627,7 @@ int blizzard::http::parse_title()
 
 	char * mthd = line;
 
-	while(*mthd == ' ')mthd++;
+	while (*mthd == ' ') mthd++;
 
 	char * url = strchr(mthd, ' ');
 	if (!url)
@@ -635,7 +635,7 @@ int blizzard::http::parse_title()
 		return 400;
 	}
 
-	while(*url == ' ')*url++ = 0;
+	while (*url == ' ') *url++ = 0;
 
 	char * version = strchr(url, ' ');
 	if (!version)
@@ -643,7 +643,7 @@ int blizzard::http::parse_title()
 		return 400;
 	}
 
-	while(*version == ' ')*version++ = 0;
+	while (*version == ' ') *version++ = 0;
 
 	if (strncasecmp(version, "HTTP/", 5))
 	{
@@ -726,7 +726,7 @@ int blizzard::http::parse_header_line()
 
 	state_ = sDone;
 
-	while(*key == ' ')key++;
+	while (*key == ' ') key++;
 	char * val = strchr(key, ':');
 	if (!val)
 	{
@@ -734,7 +734,7 @@ int blizzard::http::parse_header_line()
 	}
 
 	*val++ = 0;
-	while(*val == ' ')val++;
+	while (*val == ' ') val++;
 
 	if (header_items_num < MAX_HEADER_ITEMS && *key)
 	{
