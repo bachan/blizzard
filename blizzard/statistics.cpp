@@ -77,7 +77,7 @@ void blizzard::statistics::process(double now)
 	}
 }
 
-void blizzard::statistics::report_response_time(uint64_t t)
+void blizzard::statistics::report_response_time(double t)
 {
 	resp_time_total += t;
 	if (t > max_t) max_t = t;

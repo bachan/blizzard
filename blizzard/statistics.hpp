@@ -14,7 +14,7 @@ struct statistics
 	double last_processed_time;
 
 	volatile int requests_count;
-	volatile uint64_t resp_time_total;
+	volatile double resp_time_total;
 	volatile double resp_time_min;
 	volatile double resp_time_mid;
 	volatile double resp_time_max;
@@ -39,7 +39,7 @@ public:
 	statistics();
 
 	void process(double now);
-	void report_response_time(uint64_t time);
+	void report_response_time(double t);
 
 	void report_easy_queue_len(size_t len);
 	void report_hard_queue_len(size_t len);

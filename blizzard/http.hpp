@@ -37,6 +37,7 @@ protected:
 	enum {WRITE_BODY_SZ = 32768};
 
 	int fd;
+	double response_time;
 
 	bool want_read;
 	bool want_write;
@@ -115,7 +116,9 @@ public:
 	void unlock();
 	bool is_locked()const;
 
-	int get_fd()const;
+	int get_fd() const;
+
+	double get_response_time() const;
 
 	void process();
 

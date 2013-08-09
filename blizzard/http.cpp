@@ -65,6 +65,7 @@ int blizzard::http::http_codes_num = 0;
 
 blizzard::http::http() :
 	fd(-1),
+	response_time(0),
 	want_read(false),
 	want_write(false),
 	can_read(false),
@@ -179,6 +180,8 @@ void blizzard::http::add_watcher(struct ev_loop *loop)
 
 	ev_timer_init(&e.watcher_timeout, timeout_callback, 0, s->config.blz.plugin.connection_timeout / (double) 1000);
 	ev_timer_again(loop, &e.watcher_timeout);
+
+	response_time = ev_now(loop);
 }
 
 void blizzard::http::init(int new_fd, const struct in_addr& ip)
@@ -191,6 +194,8 @@ void blizzard::http::init(int new_fd, const struct in_addr& ip)
 	{
 		log_warn("blizzard::http::[%d] tried to double-init on %d", fd, new_fd);
 	}
+
+	response_time = 0;
 
 	in_ip = ip;
 
@@ -292,6 +297,11 @@ void blizzard::http::set_wreof()
 int blizzard::http::get_fd()const
 {
 	return fd;
+}
+
+double blizzard::http::get_response_time() const
+{
+	return response_time;
 }
 
 void blizzard::http::lock()

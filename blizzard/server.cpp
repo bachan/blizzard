@@ -352,6 +352,8 @@ bool blizzard::server::pop_done(http** el)
 	{
 		*el = done_queue.front();
 
+		stats.report_response_time(ev_now(loop) - (*el)->get_response_time());
+
 		log_debug("pop_done %d", (*el)->get_fd());
 
 		done_queue.pop_front();
