@@ -7,8 +7,6 @@ inline static const T& min(const T& a, const T& b)
 	return a < b ? a : b;
 }
 
-//-------------------------------------------------------------------------------------------------------------------
-
 template<int data_size>
 inline mem_chunk<data_size>::mem_chunk() : sz(0), current(0), can_expand(false), next(0)
 {
@@ -134,7 +132,7 @@ inline size_t mem_chunk<data_size>::append_data(const void * data, size_t data_s
 
 			size_t to_write = min<size_t>(data_sz, cur_page->page_size() - cur_page->sz);
 
-			 memcpy(cur_page->page + cur_page->sz, p, to_write);
+			memcpy(cur_page->page + cur_page->sz, p, to_write);
 			p += to_write;
 			data_sz -= to_write;
 
@@ -156,7 +154,6 @@ inline void mem_chunk<data_size>::print()
 		char u[1024];
 		memset(u, 0, 1024);
 		memcpy(u, cur_page->page, cur_page->sz);
-		/* log_debug("mem_chunk[#%d](mr:%d,sz:%d)'%s'", ch_n, cur_page->current, cur_page->sz, u); */
 		cur_page = cur_page->next;
 		ch_n++;
 	}
@@ -180,11 +177,8 @@ inline bool mem_chunk<data_size>::write_to_fd(int fd, bool& can_write, bool& wan
 		if (to_write)
 		{
 			ssize_t wr = write(fd, cur_page->page + cur_page->current, to_write);
-			// log_info("wr = %d, to_write = %d, cur_page->get_data_size() = %d, errno = %d (%s)", wr, to_write, cur_page->get_data_size(), errno, coda_strerror(errno));
 			if (-1 == wr)
 			{
-				/* log_debug("process/read error: '%s'", coda_strerror(errno)); */
-
 				switch (errno)
 				{
 				case EPIPE:
@@ -193,7 +187,6 @@ inline bool mem_chunk<data_size>::write_to_fd(int fd, bool& can_write, bool& wan
 					can_write = false;
 					return false;
 				case EINTR:
-					/* log_debug("chunk/write: EINTR"); */
 					break;
 				default:
 					log_err(errno, "chunk/write error");
@@ -213,7 +206,6 @@ inline bool mem_chunk<data_size>::write_to_fd(int fd, bool& can_write, bool& wan
 			}
 			else
 			{
-				/* log_debug("chunk/write: got EOF"); */
 				can_write = false;
 				wreof = true;
 				return false;
@@ -254,10 +246,9 @@ inline bool mem_chunk<data_size>::read_from_fd(int fd, bool& can_read, bool& wan
 		ssize_t to_read = cur_page->page_size() - cur_page->get_data_size();
 		if (to_read)
 		{
-			ssize_t    rd = read(fd, cur_page->page + cur_page->get_data_size(), to_read);
+			ssize_t rd = read(fd, cur_page->page + cur_page->get_data_size(), to_read);
 			if (-1 == rd)
 			{
-			/* log_debug("process/read error: '%s'", coda_strerror(errno)); */
 				if (EAGAIN == errno)
 				{
 					can_read = false;
@@ -318,8 +309,6 @@ inline bool mem_chunk<data_size>::read_from_fd(int fd, bool& can_read, bool& wan
 		}
 	}
 }
-
-//-------------------------------------------------------------------------------------------------------------------
 
 inline mem_block::mem_block(size_t sz) : page(0), page_capacity(0), page_sz(0), current(0)
 {
@@ -417,8 +406,6 @@ inline bool mem_block::write_to_fd(int fd, bool& can_write, bool& want_write, bo
 			ssize_t wr = write(fd, page + current, to_write);
 			if (-1 == wr)
 			{
-				/* log_debug("process/read error: '%s'", coda_strerror(errno)); */
-
 				switch (errno)
 				{
 				case EPIPE:
@@ -453,7 +440,6 @@ inline bool mem_block::write_to_fd(int fd, bool& can_write, bool& want_write, bo
 			}
 			else
 			{
-				/* log_debug("block/write: got EOF"); */
 				can_write = false;
 				wreof = true;
 				return false;
@@ -474,7 +460,7 @@ inline bool mem_block::read_from_fd(int fd, bool& can_read, bool& want_read, boo
 		ssize_t to_read = capacity() - size();
 		if (to_read)
 		{
-			ssize_t    rd = read(fd, page + size(), to_read);
+			ssize_t rd = read(fd, page + size(), to_read);
 			if (-1 == rd)
 			{
 				if (EAGAIN == errno)
@@ -511,8 +497,6 @@ inline bool mem_block::read_from_fd(int fd, bool& can_read, bool& want_read, boo
 			}
 			else
 			{
-				/* log_debug("block/read: got EOF"); */
-
 				can_read = false;
 				rdeof = true;
 
@@ -528,6 +512,5 @@ inline bool mem_block::read_from_fd(int fd, bool& can_read, bool& want_read, boo
 	}
 }
 
-//-------------------------------------------------------------------------------------------------------------------
 }
-//-------------------------------------------------------------------------------------------------------------------
+

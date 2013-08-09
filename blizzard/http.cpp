@@ -57,7 +57,6 @@ codes_table[] = {
 
 #define codes_table_sz (sizeof(codes_table) / sizeof(codes_table[0]))
 
-
 enum {HTTP_CODES_MAX_SIZE = 1024};
 const char * http_codes_array[HTTP_CODES_MAX_SIZE];
 
@@ -807,7 +806,6 @@ int blizzard::http::commit()
 	{
 		resp_status_str = http_codes[response_status];
 	}
-
 
 	int l = snprintf(buff, 1023,
 		"HTTP/%d.%d %d %s\r\n"

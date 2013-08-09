@@ -19,11 +19,11 @@ void blizzard::plugin_factory::load_module(const blz_config::BLZ::PLUGIN& pd)
 		return;
 	}
 
-	if (0 == loaded_module)
+	if (NULL == loaded_module)
 	{
 		loaded_module = dlopen(pd.library.c_str(), RTLD_NOW | RTLD_LOCAL);
 
-		if (loaded_module == 0)
+		if (NULL == loaded_module)
 		{
 			throw coda_error("loading module %s failed: %s", pd.library.c_str(), dlerror());
 		}
@@ -46,14 +46,14 @@ void blizzard::plugin_factory::load_module(const blz_config::BLZ::PLUGIN& pd)
 
 	const char* errmsg = dlerror();
 
-	if (0 != errmsg)
+	if (NULL != errmsg)
 	{
 		throw coda_error("error searching 'get_plugin_instance' in module %s: %s", pd.library.c_str(), errmsg);
 	}
 
 	plugin_handle = (*func)();
 
-	if (0 == plugin_handle)
+	if (NULL == plugin_handle)
 	{
 		throw coda_error("module %s: instance of plugin is not created", pd.library.c_str());
 	}
@@ -61,7 +61,7 @@ void blizzard::plugin_factory::load_module(const blz_config::BLZ::PLUGIN& pd)
 	if (BLZ_OK != plugin_handle->load(pd.params.c_str()))
 	{
 		delete plugin_handle;
-		plugin_handle = 0;
+		plugin_handle = NULL;
 		throw coda_error("module init failed");
 	}
 }
@@ -71,14 +71,14 @@ void blizzard::plugin_factory::stop_module()
 	if (plugin_handle)
 	{
 		delete plugin_handle;
-		plugin_handle = 0;
+		plugin_handle = NULL;
 	}
 
 	if (loaded_module)
 	{
 		//FIXME: valgrind looses symbol names if we close the library
 		//dlclose(loaded_module);
-		loaded_module = 0;
+		loaded_module = NULL;
 	}
 }
 

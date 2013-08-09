@@ -19,6 +19,7 @@ class mem_chunk
 
 	mem_chunk<data_size>* next;
 	void insert_page();
+
 public:
 	mem_chunk();
 	~mem_chunk();
