@@ -573,7 +573,7 @@ void blizzard::server::easy_processing_loop()
 		if (task->get_request_uri_path() == config.blz.stats.uri)
 		{
 			std::string xml;
-			stats.generate_xml(xml, start_time);
+			stats.generate_xml(xml, start_time, http_pool.allocated_pages(), http_pool.allocated_objects());
 
 			task->set_response_status(200);
 			task->add_response_header("Content-type", "text/plain");
