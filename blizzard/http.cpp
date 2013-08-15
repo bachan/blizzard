@@ -65,6 +65,7 @@ int blizzard::http::http_codes_num = 0;
 
 blizzard::http::http() :
 	fd(-1),
+	server_loop(NULL),
 	response_time(0),
 	want_read(false),
 	want_write(false),
@@ -77,7 +78,6 @@ blizzard::http::http() :
 	header_items_num(0),
 	protocol_major(0),
 	protocol_minor(0),
-	keep_alive(false),
 	cache(false),
 	uri_path(0),
 	uri_params(0),
@@ -181,6 +181,7 @@ void blizzard::http::add_watcher(struct ev_loop *loop)
 	ev_timer_init(&e.watcher_timeout, timeout_callback, 0, s->config.blz.plugin.connection_timeout / (double) 1000);
 	ev_timer_again(loop, &e.watcher_timeout);
 
+	server_loop = loop;
 	response_time = ev_now(loop);
 }
 
@@ -212,7 +213,6 @@ void blizzard::http::init(int new_fd, const struct in_addr& ip)
 	header_items_num = 0;
 	protocol_major = 0;
 	protocol_minor = 0;
-	keep_alive = false;
 	cache = false;
 
 	uri_path = 0;
@@ -338,11 +338,6 @@ int blizzard::http::get_version_minor()const
 	return protocol_minor;
 }
 
-bool blizzard::http::get_keepalive()const
-{
-	return keep_alive;
-}
-
 bool blizzard::http::get_cache()const
 {
 	return cache;
@@ -401,9 +396,9 @@ const char* blizzard::http::get_request_header_value(int sz)const
 	return header_items[sz].value;
 }
 
-void blizzard::http::set_keepalive(bool st)
+double blizzard::http::get_cached_server_time() const
 {
-	keep_alive = st;
+	return ev_now(server_loop);
 }
 
 void blizzard::http::set_cache(bool ch)
@@ -419,7 +414,7 @@ void blizzard::http::set_response_status(int st)
 void blizzard::http::add_response_header(const char* name, const char* data)
 {
 	out_headers.append_data(name, strlen(name));
-	out_headers.append_data(":", 1);
+	out_headers.append_data(": ", 2);
 	out_headers.append_data(data, strlen(data));
 	out_headers.append_data("\r\n", 2);
 }
@@ -753,19 +748,15 @@ int blizzard::http::parse_header_line()
 		header_items_num++;
 	}
 
-	if (!strcasecmp(key, "connection") && !strcmp(val, "keep-alive"))
-	{
-		keep_alive = false;
-	}
-	else if (!strncasecmp(key, "content-len", 11))
+	if (0 == strncasecmp(key, "content-length", 14))
 	{
 		int sz = atoi(val);
 		in_post.resize(sz);
 	}
-	else if (!strcasecmp(key, "expect") && !strcasecmp(val, "100-continue")) //EVIL HACK for answering on "Expect: 100-continue"
+	else if (0 == strcasecmp(key, "expect") && 0 == strcasecmp(val, "100-continue")) // EVIL HACK for answering on "Expect: 100-continue"
 	{
 		const char * ret_str = "HTTP/1.1 100 Continue\r\n\r\n";
-		int ret_str_sz = 25;//strlen(ret_str);
+		int ret_str_sz = 25; // strlen(ret_str);
 
 		ssize_t wr = write(fd, ret_str, ret_str_sz);
 		if (wr == -1 || wr < ret_str_sz)
@@ -831,14 +822,7 @@ int blizzard::http::commit()
 		out_headers.append_data(m, sizeof(m) - 1);
 	}
 
-	if (keep_alive)
-	{
-		add_response_header("Connection", "keep-alive");
-	}
-	else
-	{
-		add_response_header("Connection", "close");
-	}
+	add_response_header("Connection", "close");
 
 	if (out_post.get_data_size())
 	{

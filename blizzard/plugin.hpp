@@ -17,11 +17,10 @@
 struct blz_task
 {
 	virtual ~blz_task(){};
-	virtual int get_request_method() const = 0;
 
+	virtual int              get_request_method() const = 0;
 	virtual int              get_version_major() const = 0;
 	virtual int              get_version_minor() const = 0;
-	virtual bool             get_keepalive() const = 0;
 	virtual bool             get_cache() const = 0;
 	virtual struct in_addr   get_request_ip() const = 0;
 	virtual const char*      get_request_uri_path() const = 0;
@@ -32,13 +31,12 @@ struct blz_task
 	virtual size_t           get_request_headers_num() const = 0;
 	virtual const char*      get_request_header_key(int) const = 0;
 	virtual const char*      get_request_header_value(int) const = 0;
+	virtual double           get_cached_server_time() const = 0;
 
-	virtual void set_response_status(int) = 0;
-	virtual void set_keepalive(bool) = 0;
-	virtual void set_cache(bool) = 0;
-
-	virtual void add_response_header(const char* name, const char* data) = 0;
-	virtual void add_response_buffer(const char* data, size_t sz) = 0;
+	virtual void             set_cache(bool) = 0;
+	virtual void             set_response_status(int) = 0;
+	virtual void             add_response_header(const char* name, const char* data) = 0;
+	virtual void             add_response_buffer(const char* data, size_t sz) = 0;
 };
 
 #define BLZ_OK 0
