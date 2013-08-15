@@ -31,7 +31,7 @@ struct blz_task
 	virtual size_t           get_request_headers_num() const = 0;
 	virtual const char*      get_request_header_key(int) const = 0;
 	virtual const char*      get_request_header_value(int) const = 0;
-	virtual double           get_cached_server_time() const = 0;
+	virtual double           get_current_server_time() const = 0;
 
 	virtual void             set_cache(bool) = 0;
 	virtual void             set_response_status(int) = 0;

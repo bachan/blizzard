@@ -396,7 +396,7 @@ const char* blizzard::http::get_request_header_value(int sz)const
 	return header_items[sz].value;
 }
 
-double blizzard::http::get_cached_server_time() const
+double blizzard::http::get_current_server_time() const
 {
 	return ev_now(server_loop);
 }

@@ -140,7 +140,7 @@ public:
 	size_t           get_request_headers_num() const;
 	const char*      get_request_header_key(int) const;
 	const char*      get_request_header_value(int) const;
-	double           get_cached_server_time() const;
+	double           get_current_server_time() const;
 
 	void             set_cache(bool);
 	void             set_response_status(int);
