@@ -1,3 +1,9 @@
+blizzard (0.3.3-1) unstable; urgency=high
+
+  * get_current_server_time()
+
+ -- Sergey Bochenkov <ba4an@yandex.ru>  Tue, 20 Aug 2013 15:19:00 +0700
+
 blizzard (0.3.2-1) unstable; urgency=high
 
   * fixed response_time and mem_allocator statistics
