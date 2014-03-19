@@ -1,3 +1,9 @@
+blizzard (0.3.3-2) unstable; urgency=high
+
+  * version bump
+
+ -- Sergey Bochenkov <ba4an@yandex.ru>  Wed, 19 Mar 2014 11:19:00 +0700
+
 blizzard (0.3.3-1) unstable; urgency=high
 
   * get_current_server_time()
