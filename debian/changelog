@@ -1,8 +1,9 @@
-blizzard (0.3.3-2) unstable; urgency=high
+blizzard (0.3.4-1) unstable; urgency=high
 
-  * version bump
+  * bugfix: blizzard didn't process request correctly if 1st request buffer
+    was equal to in_headers mem_chunk size
 
- -- Sergey Bochenkov <ba4an@yandex.ru>  Wed, 19 Mar 2014 11:19:00 +0700
+ -- Sergey Bochenkov <ba4an@yandex.ru>  Wed, 26 Jun 2014 11:19:00 +0700
 
 blizzard (0.3.3-1) unstable; urgency=high
 
