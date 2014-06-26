@@ -505,7 +505,7 @@ bool blizzard::http::network_tryread()
 {
 	if (-1 != fd)
 	{
-		while (can_read && !stop_reading/* && want_read*/)
+		while (can_read && !stop_reading && want_read)
 		{
 			if (!in_headers.read_from_fd(fd, can_read, want_read, stop_reading))
 			{
@@ -572,7 +572,7 @@ char * blizzard::http::read_header_line()
 {
 	while (true)
 	{
-		want_read = true;
+		// want_read = true;
 
 		if (!network_tryread())
 		{
