@@ -380,11 +380,13 @@ void blizzard::server::load_config(const char* xml_in, const char *pid_fn, bool 
 
 	was_daemonized = is_daemon;
 
+	log_level = log_levels(config.blz.log_level.c_str());
+
 	if (!is_daemon) return;
 
 	int res;
 	
-	if (0 > (res = log_create_from_str(config.blz.log_file_name.c_str(), config.blz.log_level.c_str())))
+	if (0 > (res = log_create(config.blz.log_file_name.c_str(), log_level)))
 	{
 		throw coda_errno(errno, "logger init from (%s, %s) failed",
 			config.blz.log_file_name.c_str(),
