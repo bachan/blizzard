@@ -427,7 +427,7 @@ static void wakeup_callback(EV_P_ ev_io *w, int tev)
 
 static void silent_callback(EV_P_ ev_timer *w, int tev)
 {
-	if (0 != coda_terminate)
+	if (0 != coda_terminate || 0 != coda_changecfg)
 	{
 		ev_timer_stop(EV_A_ w);
 		ev_break(EV_A_ EVUNLOOP_ALL);
