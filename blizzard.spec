@@ -1,6 +1,6 @@
 Summary: 	Blizzard http server
 Name: 		blizzard
-Version: 	0.1
+Version: 	0.3.4
 Release: 	0%{?dist}
 License: 	BSD
 Source: 	blizzard-%{version}.tar.gz
@@ -50,6 +50,6 @@ rm -rf %{buildroot}
 %{_includedir}/blizzard
 
 %changelog
-* Sun Jul 27 2014 Alexander Pankov <pianist@usrsrc.ru> - 0.1.0-0
+* Sun Jul 27 2014 Alexander Pankov <pianist@usrsrc.ru> - 0.3.4-0
 + First RPM build
 
