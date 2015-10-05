@@ -1,3 +1,9 @@
+blizzard (0.3.4-3) unstable; urgency=low
+
+  * install example module into lib
+
+ -- Sergey Bochenkov <bachan@farm.itim.vn>  Mon, 05 Oct 2015 12:24:57 +0700
+
 blizzard (0.3.4-2) unstable; urgency=low
 
   * install example module into lib
