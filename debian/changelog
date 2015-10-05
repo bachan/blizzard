@@ -1,3 +1,9 @@
+blizzard (0.3.4-2) unstable; urgency=low
+
+  * install example module into lib
+
+ -- Sergey Bochenkov <bachan@farm.itim.vn>  Mon, 05 Oct 2015 10:50:27 +0700
+
 blizzard (0.3.4-1) unstable; urgency=high
 
   * bugfix: blizzard didn't process request correctly if 1st request buffer
