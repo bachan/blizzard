@@ -6,7 +6,7 @@ INCLUDE_DIRECTORIES (src/)
 
 USE_PACKAGE (expat expat.h)
 USE_PACKAGE (ev ev.h PATH_SUFFIXES libev .) # PATH_SUFFIXES is for stupid CentOS RPM package
-USE_PACKAGE (coda coda/coda.h /usr/lib /usr/lib64)
+USE_PACKAGE (coda coda/coda.h)
 
 AUX_SOURCE_DIRECTORY (src/blizzard SRC_BLIZZARD)
 ADD_EXECUTABLE (blizzard ${SRC_BLIZZARD})

@@ -9,7 +9,7 @@
 		<connection_timeout>100</connection_timeout>
 		<idle_timeout>1000</idle_timeout>
 
-		<library>${CMAKE_INSTALL_PREFIX}/lib64/liblz_status.so</library>
+		<library>${CMAKE_INSTALL_PREFIX}/@LIBDIR@/liblz_status.so</library>
 		<params>${CMAKE_INSTALL_PREFIX}/etc/lz_status.plugin.xml</params>
 
 		<easy_threads>1</easy_threads>
