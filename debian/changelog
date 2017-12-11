@@ -1,3 +1,9 @@
+blizzard (0.3.4-4) unstable; urgency=medium
+
+  * fixed build for Debian 9
+
+ -- Konstantin Akimov <knstqq@gmail.com>  Mon, 11 Dec 2017 13:01:11 +0700
+
 blizzard (0.3.4-3) unstable; urgency=low
 
   * install example module into lib
