@@ -1,3 +1,9 @@
+blizzard (0.3.4-5) unstable; urgency=medium
+
+  * one package for both D8 and D9
+
+ -- Sergey Bochenkov <ba4an@yandex.ru>  Wed, 20 Dec 2017 16:56:30 +0700
+
 blizzard (0.3.4-4) unstable; urgency=medium
 
   * fixed build for Debian 9
