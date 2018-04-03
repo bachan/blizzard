@@ -1,6 +1,6 @@
 <blizzard>
-	<pid_file_name>${CMAKE_INSTALL_PREFIX}/var/run/blizzard.pid</pid_file_name>
-	<log_file_name>${CMAKE_INSTALL_PREFIX}/var/log/blizzard.log</log_file_name>
+	<pid_file_name>@CMAKE_INSTALL_PREFIX@/var/run/blizzard.pid</pid_file_name>
+	<log_file_name>@CMAKE_INSTALL_PREFIX@/var/log/blizzard.log</log_file_name>
 	<log_level>notice</log_level>
 
 	<stats uri="/stats" />
@@ -9,8 +9,8 @@
 		<connection_timeout>100</connection_timeout>
 		<idle_timeout>1000</idle_timeout>
 
-		<library>${CMAKE_INSTALL_PREFIX}/@LIBDIR@/liblz_status.so</library>
-		<params>${CMAKE_INSTALL_PREFIX}/etc/lz_status.plugin.xml</params>
+		<library>@CMAKE_INSTALL_PREFIX@/lib/liblz_status.so</library>
+		<params>@CMAKE_INSTALL_PREFIX@/etc/lz_status.plugin.xml</params>
 
 		<easy_threads>1</easy_threads>
 		<hard_threads>0</hard_threads>

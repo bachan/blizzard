@@ -9,7 +9,7 @@
 		<connection_timeout>100000</connection_timeout>
 		<idle_timeout>1000</idle_timeout>
 
-		<library>@CMAKE_INSTALL_PREFIX@/@LIBDIR@/libblzmod_example.so</library>
+		<library>@CMAKE_INSTALL_PREFIX@/lib/libblzmod_example.so</library>
 		<params>@CMAKE_INSTALL_PREFIX@/etc/blzmod_example/config_module.xml</params>
 
 		<easy_threads>4</easy_threads>

@@ -24,7 +24,7 @@ INSTALL_TEMPLATE (src/blizzard/config.xml.in DESTINATION etc/blizzard)
 
 AUX_SOURCE_DIRECTORY (blzmod_example SRC_BLZMOD_EXAMPLE)
 ADD_LIBRARY (blzmod_example SHARED ${SRC_BLZMOD_EXAMPLE})
-INSTALL (TARGETS blzmod_example DESTINATION ${LIBDIR})
+INSTALL (TARGETS blzmod_example DESTINATION lib)
 INSTALL_TEMPLATE (blzmod_example/config.xml.in DESTINATION etc/blzmod_example)
 INSTALL_TEMPLATE (blzmod_example/config_module.xml.in DESTINATION etc/blzmod_example)
 
