@@ -539,12 +539,10 @@ bool blizzard::server::process(http * con)
 
 			if (false == push_easy(con))
 			{
-				log_debug("easy queue full: easy_queue_size == %d", config.blz.plugin.easy_queue_limit);
-
+				log_error("easy queue full: easy_queue_size == %d", config.blz.plugin.easy_queue_limit);
 				con->set_response_status(503);
 				con->add_response_header("Content-type", "text/plain");
 				con->add_response_buffer("easy queue filled!", strlen("easy queue filled!"));
-
 				push_done(con);
 			}
 		}
@@ -606,7 +604,7 @@ void blizzard::server::easy_processing_loop()
 					bool ret = push_hard(task);
 					if (false == ret)
 					{
-						log_debug("hard queue full: hard_queue_size == %d", config.blz.plugin.hard_queue_limit);
+						log_error("hard queue full: hard_queue_size == %d", config.blz.plugin.hard_queue_limit);
 						task->set_response_status(503);
 						task->add_response_header("Content-type", "text/plain");
 						task->add_response_buffer("hard queue filled!", strlen("hard queue filled!"));
