@@ -8,6 +8,8 @@ USE_PACKAGE (expat expat.h)
 USE_PACKAGE (ev ev.h PATH_SUFFIXES libev .) # PATH_SUFFIXES is for stupid CentOS RPM package
 USE_PACKAGE (coda coda/coda.h)
 
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -no-pie")
+
 AUX_SOURCE_DIRECTORY (src/blizzard SRC_BLIZZARD)
 ADD_EXECUTABLE (blizzard ${SRC_BLIZZARD})
 TARGET_LINK_LIBRARIES (blizzard ${LIB_coda} ${LIB_expat} ${LIB_ev} pthread)
@@ -16,15 +18,34 @@ IF (CMAKE_SYSTEM_NAME STREQUAL Linux)
   TARGET_LINK_LIBRARIES (blizzard dl)
 ENDIF ()
 
-INSTALL (FILES src/blizzard/plugin.hpp DESTINATION include/blizzard)
-INSTALL (TARGETS blizzard DESTINATION bin)
-INSTALL_TEMPLATE (src/blizzard/config.xml.in DESTINATION etc/blizzard)
+INSTALL (FILES src/blizzard/plugin.hpp DESTINATION include/blizzard COMPONENT BLIZZARD_DEV)
+INSTALL (TARGETS blizzard DESTINATION bin COMPONENT BLIZZARD)
+INSTALL_TEMPLATE (src/blizzard/config.xml.in DESTINATION etc/blizzard COMPONENT BLIZZARD)
 
 # Example Module
-
 AUX_SOURCE_DIRECTORY (blzmod_example SRC_BLZMOD_EXAMPLE)
 ADD_LIBRARY (blzmod_example SHARED ${SRC_BLZMOD_EXAMPLE})
 INSTALL (TARGETS blzmod_example DESTINATION lib)
 INSTALL_TEMPLATE (blzmod_example/config.xml.in DESTINATION etc/blzmod_example)
 INSTALL_TEMPLATE (blzmod_example/config_module.xml.in DESTINATION etc/blzmod_example)
+
+SET(CPACK_SET_DESTDIR ON)
+SET(CPACK_GENERATOR "DEB")
+SET(CPACK_DEB_COMPONENT_INSTALL ON)
+SET(CPACK_COMPONENTS_ALL BLIZZARD BLIZZARD_DEV)
+SET(CPACK_PACKAGE_VERSION_MAJOR "0")
+SET(CPACK_PACKAGE_VERSION_MINOR "1")
+SET(CPACK_PACKAGE_VERSION_PATCH "0")
+set(CPACK_PACKAGE_CONTACT "Alexander Golenev alex.golenev@gmail.com")
+
+set(CPACK_DEBIAN_BLIZZARD_PACKAGE_NAME "blizzard")
+set(CPACK_COMPONENT_BLIZZARD_DESCRIPTION "Blizzard is a multi-thread HTTP-server with two pools of threads (one for easy to handle requests, and one for hard to handle), forked from Begun's lizard.")
+set(CPACK_DEBIAN_BLIZZARD_FILE_NAME "${CPACK_DEBIAN_BLIZZARD_PACKAGE_NAME}.${CPACK_PACKAGE_VERSION_MAJOR}.${CPACK_PACKAGE_VERSION_MINOR}.${CPACK_PACKAGE_VERSION_PATCH}_all.deb")
+
+set(CPACK_DEBIAN_BLIZZARD_DEV_PACKAGE_NAME "blizzard-dev")
+set(CPACK_COMPONENT_BLIZZARD_DEV_DESCRIPTION "Blizzard server plugin development headers")
+set(CPACK_DEBIAN_BLIZZARD_DEV_FILE_NAME "${CPACK_DEBIAN_BLIZZARD_DEV_PACKAGE_NAME}.${CPACK_PACKAGE_VERSION_MAJOR}.${CPACK_PACKAGE_VERSION_MINOR}.${CPACK_PACKAGE_VERSION_PATCH}_all.deb")
+
+
+include(CPack)
 
