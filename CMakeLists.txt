@@ -16,6 +16,10 @@ IF (CMAKE_SYSTEM_NAME STREQUAL Linux)
   TARGET_LINK_LIBRARIES (blizzard dl)
 ENDIF ()
 
+IF (CMAKE_SYSTEM_NAME STREQUAL Darwin)
+  SET (CMAKE_MACOSX_RPATH ON)
+ENDIF ()
+
 INSTALL (FILES src/blizzard/plugin.hpp DESTINATION include/blizzard)
 INSTALL (TARGETS blizzard DESTINATION bin)
 INSTALL_TEMPLATE (src/blizzard/config.xml.in DESTINATION etc/blizzard)
@@ -24,6 +28,7 @@ INSTALL_TEMPLATE (src/blizzard/config.xml.in DESTINATION etc/blizzard)
 
 AUX_SOURCE_DIRECTORY (blzmod_example SRC_BLZMOD_EXAMPLE)
 ADD_LIBRARY (blzmod_example SHARED ${SRC_BLZMOD_EXAMPLE})
+TARGET_LINK_LIBRARIES (blzmod_example ${LIB_coda})
 INSTALL (TARGETS blzmod_example DESTINATION lib)
 INSTALL_TEMPLATE (blzmod_example/config.xml.in DESTINATION etc/blzmod_example)
 INSTALL_TEMPLATE (blzmod_example/config_module.xml.in DESTINATION etc/blzmod_example)
