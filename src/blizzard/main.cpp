@@ -13,12 +13,12 @@ int main(int argc, char** argv)
 	if (0 > coda_getopt_parse(argc, argv, &opt) || NULL == opt.config)
 	{
 		coda_getopt_usage(argc, argv);
-		die(errno, "coda_getopt_parse(%d, %s)", argc, argv[0]);
+		log_die(errno, "coda_getopt_parse(%d, %s)", argc, argv[0]);
 	}
 
 	if (0 > coda_daemon_load(&opt))
 	{
-		die(errno, "coda_daemon_load()");
+		log_die(errno, "coda_daemon_load()");
 	}
 
 /* WRITE YOUR CODE HERE */
@@ -49,7 +49,7 @@ int main(int argc, char** argv)
 
 	if (0 > coda_daemon_stop(&opt))
 	{
-		die(errno, "coda_daemon_stop()");
+		log_die(errno, "coda_daemon_stop()");
 	}
 
 	return 0;
