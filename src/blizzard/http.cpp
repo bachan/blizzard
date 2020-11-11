@@ -689,6 +689,10 @@ int blizzard::http::parse_title()
 			method = BLZ_METHOD_POST;
 		}
 		break;
+	case 'o':
+	case 'O':
+		method = BLZ_METHOD_OPTIONS;
+		break;
 	default:
 		method = BLZ_METHOD_UNDEF;
 		return 501;

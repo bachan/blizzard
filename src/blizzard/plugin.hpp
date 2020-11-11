@@ -9,10 +9,11 @@
 #define BLZ_VERSION "0.3.3" /* major.minor.patch[.quickfix] */
 #define BLZ_VERSION_BINARY (0 << 24) + (3 << 16) + (3 << 8) + 0
 
-#define BLZ_METHOD_UNDEF 0
-#define BLZ_METHOD_GET   1
-#define BLZ_METHOD_POST  2
-#define BLZ_METHOD_HEAD  3
+#define BLZ_METHOD_UNDEF   0
+#define BLZ_METHOD_GET     1
+#define BLZ_METHOD_POST    2
+#define BLZ_METHOD_HEAD    3
+#define BLZ_METHOD_OPTIONS 4
 
 struct blz_task
 {
