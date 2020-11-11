@@ -323,6 +323,7 @@ bool blizzard::server::pop_hard_or_wait(http** el)
 
 	return ret;
 }
+
 bool blizzard::server::push_done(http * el)
 {
 	pthread_mutex_lock(&done_mutex);

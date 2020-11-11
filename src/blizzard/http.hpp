@@ -30,8 +30,8 @@ protected:
 	static int http_codes_num;
 	static const char ** http_codes;
 
-	enum {MAX_HEADER_ITEMS = 16};
-	enum {READ_HEADERS_SZ = 8192};
+	enum {MAX_HEADER_ITEMS = 32};
+	enum {READ_HEADERS_SZ = 32768};
 	enum {WRITE_TITLE_SZ = 8192};
 	enum {WRITE_HEADERS_SZ = 4096};
 	enum {WRITE_BODY_SZ = 32768};

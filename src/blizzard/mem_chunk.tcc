@@ -163,7 +163,6 @@ template<int data_size>
 inline bool mem_chunk<data_size>::write_to_fd(int fd, bool& can_write, bool& want_write, bool& wreof)
 {
 	bool iswr = false;
-
 	mem_chunk<data_size> * cur_page = this;
 
 	while (cur_page->next && (cur_page->current == cur_page->get_data_size()))
@@ -233,7 +232,6 @@ template<int data_size>
 inline bool mem_chunk<data_size>::read_from_fd(int fd, bool& can_read, bool& want_read, bool& rdeof)
 {
 	mem_chunk<data_size> * cur_page = this;
-		
 	bool failed = true;
 
 	while (cur_page->next && (cur_page->page_size() == cur_page->get_data_size()))
@@ -252,7 +250,6 @@ inline bool mem_chunk<data_size>::read_from_fd(int fd, bool& can_read, bool& wan
 				if (EAGAIN == errno)
 				{
 					can_read = false;
-
 					return true;
 				}
 				else if (EINTR != errno)
@@ -275,7 +272,6 @@ inline bool mem_chunk<data_size>::read_from_fd(int fd, bool& can_read, bool& wan
 				if (rd < to_read)
 				{
 					can_read = false;
-
 					return true;
 				}
 			}
@@ -284,7 +280,6 @@ inline bool mem_chunk<data_size>::read_from_fd(int fd, bool& can_read, bool& wan
 				log_debug("chunk/read: got EOF");
 				can_read = false;
 				rdeof = true;
-
 				return true;
 			}
 		}
@@ -294,7 +289,7 @@ inline bool mem_chunk<data_size>::read_from_fd(int fd, bool& can_read, bool& wan
 		}
 		else if (failed)
 		{
-				   return false;
+			return false;
 		}
 
 		if (cur_page->next)
@@ -304,7 +299,6 @@ inline bool mem_chunk<data_size>::read_from_fd(int fd, bool& can_read, bool& wan
 		else
 		{
 			want_read = false;
-
 			return true;
 		}
 	}
