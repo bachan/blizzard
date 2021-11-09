@@ -60,7 +60,7 @@ struct blz_config : public coda::txml_determination_object
 
 			PLUGIN()
 				: connection_timeout(0)
-				, idle_timeout(0)
+				, idle_timeout(-1)
 				, easy_threads(1)
 				, hard_threads(0)
 				, easy_queue_limit(0)
@@ -86,7 +86,7 @@ struct blz_config : public coda::txml_determination_object
 				ip.clear();
 				port.clear();
 				connection_timeout = 0;
-				idle_timeout = 0;
+				idle_timeout = -1;
 
 				library.clear();
 				params.clear();

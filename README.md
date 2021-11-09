@@ -58,7 +58,7 @@ and inits system objects:
     2. handler found a failure:   blizzard answers HTTP 503 to done-queue
 
 * idle-thread. This thread calls idle-function with specified interval if a param `<idle_timeout>` is specified in config.
-  The method `idle` will be called once if the time-out is not specified
+  The method `idle` will be called once if the time-out is not specified or negative.
 
 
 ## Config

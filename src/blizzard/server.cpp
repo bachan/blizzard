@@ -219,7 +219,7 @@ bool blizzard::server::push_easy(http * el)
 
 	pthread_mutex_lock(&easy_proc_mutex);
 
-	size_t eq_sz = easy_queue.size(); 
+	size_t eq_sz = easy_queue.size();
 	stats.report_easy_queue_len(eq_sz);
 
 	if (config.blz.plugin.easy_queue_limit == 0 || (eq_sz < (size_t)config.blz.plugin.easy_queue_limit))
@@ -298,8 +298,8 @@ bool blizzard::server::pop_hard_or_wait(http** el)
 	bool ret = false;
 
 	pthread_mutex_lock(&hard_proc_mutex);
-		
-	size_t hq_sz = hard_queue.size(); 
+
+	size_t hq_sz = hard_queue.size();
 	stats.report_hard_queue_len(hq_sz);
 
 	if (hq_sz)
@@ -346,7 +346,7 @@ bool blizzard::server::pop_done(http** el)
 
 	pthread_mutex_lock(&done_mutex);
 
-	size_t dq_sz = done_queue.size(); 
+	size_t dq_sz = done_queue.size();
 	stats.report_done_queue_len(dq_sz);
 
 	if (dq_sz)
@@ -386,7 +386,7 @@ void blizzard::server::load_config(const char* xml_in, const char *pid_fn, bool 
 	if (!is_daemon) return;
 
 	int res;
-	
+
 	if (0 > (res = log_create(config.blz.log_file_name.c_str(), log_level)))
 	{
 		throw coda_errno(errno, "logger init from (%s, %s) failed",
@@ -657,7 +657,7 @@ void blizzard::server::hard_processing_loop()
 
 void blizzard::server::idle_processing_loop()
 {
-	if (0 == config.blz.plugin.idle_timeout)
+	if (0 > config.blz.plugin.idle_timeout)
 	{
 		factory.idle();
 
