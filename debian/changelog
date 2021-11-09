@@ -1,3 +1,16 @@
+blizzard (0.4-1) unstable; urgency=medium
+
+  * increased size of pool http objects
+  * updated logic for idle thread: delay could be zero
+  * increased MAX_HEADER_ITEMS and READ_HEADERS_SZ
+  * treat OPTIONS request method the same way as GET
+  * use log_die instead of die from coda
+  * log error in case of full queue
+  * improved support of MacOSX
+  * added English ReadMe with Markdown format
+
+ -- Konstantin Akimov <knstqq@gmail.com>  Wed, 10 Nov 2021 01:41:28 +0700
+
 blizzard (0.3.4-5) unstable; urgency=medium
 
   * one package for both D8 and D9
